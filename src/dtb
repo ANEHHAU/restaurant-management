@@ -1,0 +1,42 @@
+CREATE DATABASE restaurant_db;
+GO
+
+USE restaurant_db;
+GO
+
+-- Bàn
+CREATE TABLE restaurant_table (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    table_name NVARCHAR(50) NOT NULL,
+    seats INT NOT NULL,
+    status NVARCHAR(20) NOT NULL -- AVAILABLE, OCCUPIED, RESERVED
+);
+
+-- Khách hàng
+CREATE TABLE customer (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    full_name NVARCHAR(100) NOT NULL,
+    address NVARCHAR(255),
+    phone NVARCHAR(20)
+);
+
+-- Đơn hàng
+CREATE TABLE orders (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    customer_id BIGINT NOT NULL,
+    order_date DATETIME2 NOT NULL,
+    total_amount DECIMAL(15,2) NOT NULL,
+    CONSTRAINT FK_orders_customer
+        FOREIGN KEY (customer_id) REFERENCES customer(id)
+);
+
+-- Chi tiết món
+CREATE TABLE order_item (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    order_id BIGINT NOT NULL,
+    item_name NVARCHAR(100) NOT NULL,
+    quantity INT NOT NULL,
+    price DECIMAL(15,2) NOT NULL,
+    CONSTRAINT FK_order_item_orders
+        FOREIGN KEY (order_id) REFERENCES orders(id)
+);
