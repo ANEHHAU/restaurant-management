@@ -1,42 +1,135 @@
-CREATE DATABASE restaurant_db;
-GO
+
+dtb dự kiến
+
+
+-- ============================
+-- 1. TẠO DATABASE
+-- ============================
+CREATE DATABASE IF NOT EXISTS restaurant_db
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
 
 USE restaurant_db;
-GO
 
--- Bàn
+-- ============================
+-- 2. BẢNG BÀN ĂN
+--    - Quản lý bàn: mã bàn, số ghế, trạng thái sử dụng (đang dùng hay bỏ)
+-- ============================
 CREATE TABLE restaurant_table (
-    id BIGINT IDENTITY(1,1) PRIMARY KEY,
-    table_name NVARCHAR(50) NOT NULL,
-    seats INT NOT NULL,
-    status NVARCHAR(20) NOT NULL -- AVAILABLE, OCCUPIED, RESERVED
-);
+    id            BIGINT PRIMARY KEY AUTO_INCREMENT,   -- Mã bàn
+    table_name    VARCHAR(50) NOT NULL,                -- Số / tên bàn
+    seats         INT NOT NULL,                        -- Số ghế
+    status        ENUM('ACTIVE','INACTIVE')            -- ACTIVE: đang sử dụng, INACTIVE: bỏ / ngưng
+                   NOT NULL DEFAULT 'ACTIVE',
+    created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                  ON UPDATE CURRENT_TIMESTAMP
+) ENGINE = InnoDB;
 
--- Khách hàng
+-- ============================
+-- 3. BẢNG KHÁCH HÀNG
+--    - Mã KH, họ tên, địa chỉ, SDT
+--    - Không gắn cờ "thường xuyên" ở đây, sẽ tính từ lịch sử đơn hàng
+-- ============================
 CREATE TABLE customer (
-    id BIGINT IDENTITY(1,1) PRIMARY KEY,
-    full_name NVARCHAR(100) NOT NULL,
-    address NVARCHAR(255),
-    phone NVARCHAR(20)
-);
+    id            BIGINT PRIMARY KEY AUTO_INCREMENT,
+    full_name     VARCHAR(100) NOT NULL,
+    address       VARCHAR(255),
+    phone         VARCHAR(20),
+    created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                  ON UPDATE CURRENT_TIMESTAMP
+) ENGINE = InnoDB;
 
--- Đơn hàng
+-- ============================
+-- 4. BẢNG MÓN ĂN
+--    - Dùng để thống kê món bán chạy, tính doanh thu theo món
+-- ============================
+CREATE TABLE dish (
+    id            BIGINT PRIMARY KEY AUTO_INCREMENT,
+    dish_name     VARCHAR(100) NOT NULL,
+    category      VARCHAR(50),
+    unit_price    DECIMAL(15,2) NOT NULL,              -- Giá niêm yết
+    is_active     TINYINT(1) NOT NULL DEFAULT 1,       -- 1: đang bán, 0: ngưng bán
+    created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                  ON UPDATE CURRENT_TIMESTAMP
+) ENGINE = InnoDB;
+
+-- ============================
+-- 5. BẢNG ĐẶT BÀN (RESERVATION)
+--    - Quản lý thông tin khách đặt bàn
+--    - Phục vụ nghiệp vụ:
+--        + Bàn trống theo thời gian
+--        + Danh sách khách hàng đặt bàn
+-- ============================
+CREATE TABLE reservation (
+    id                 BIGINT PRIMARY KEY AUTO_INCREMENT,
+    customer_id        BIGINT NOT NULL,
+    table_id           BIGINT NOT NULL,
+    reservation_start  DATETIME NOT NULL,              -- Thời gian bắt đầu giữ bàn
+    reservation_end    DATETIME NOT NULL,              -- Thời gian kết thúc dự kiến
+    num_people         INT,                            -- Số khách dự kiến
+    status             ENUM('PENDING','CONFIRMED','CANCELLED','COMPLETED')
+                       NOT NULL DEFAULT 'PENDING',
+    note               VARCHAR(255),
+    created_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_reservation_customer
+        FOREIGN KEY (customer_id) REFERENCES customer(id),
+    CONSTRAINT fk_reservation_table
+        FOREIGN KEY (table_id) REFERENCES restaurant_table(id)
+) ENGINE = InnoDB;
+
+CREATE INDEX idx_reservation_time
+    ON reservation (table_id, reservation_start, reservation_end);
+
+-- ============================
+-- 6. BẢNG ĐƠN HÀNG (ORDERS)
+--    - Số đơn hàng, mã KH, ngày đặt, bàn, số khách thực tế,...
+--    - Không lưu total_amount ở đây để sạch, sẽ tính từ order_detail
+-- ============================
 CREATE TABLE orders (
-    id BIGINT IDENTITY(1,1) PRIMARY KEY,
-    customer_id BIGINT NOT NULL,
-    order_date DATETIME2 NOT NULL,
-    total_amount DECIMAL(15,2) NOT NULL,
-    CONSTRAINT FK_orders_customer
-        FOREIGN KEY (customer_id) REFERENCES customer(id)
-);
+    id              BIGINT PRIMARY KEY AUTO_INCREMENT, -- Số đơn hàng
+    customer_id     BIGINT,                            -- Có thể NULL nếu khách vãng lai
+    table_id        BIGINT,                            -- Bàn phục vụ
+    reservation_id  BIGINT,                            -- Nếu đơn gắn với đặt bàn
+    order_time      DATETIME NOT NULL,                 -- Thời điểm đặt đơn
+    status          ENUM('NEW','IN_PROGRESS','COMPLETED','CANCELLED')
+                    NOT NULL DEFAULT 'NEW',
+    guest_count     INT,                               -- Số khách thực tế (phục vụ thống kê theo bàn)
+    note            VARCHAR(255),
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_orders_customer
+        FOREIGN KEY (customer_id) REFERENCES customer(id),
+    CONSTRAINT fk_orders_table
+        FOREIGN KEY (table_id) REFERENCES restaurant_table(id),
+    CONSTRAINT fk_orders_reservation
+        FOREIGN KEY (reservation_id) REFERENCES reservation(id)
+) ENGINE = InnoDB;
 
--- Chi tiết món
-CREATE TABLE order_item (
-    id BIGINT IDENTITY(1,1) PRIMARY KEY,
-    order_id BIGINT NOT NULL,
-    item_name NVARCHAR(100) NOT NULL,
-    quantity INT NOT NULL,
-    price DECIMAL(15,2) NOT NULL,
-    CONSTRAINT FK_order_item_orders
+CREATE INDEX idx_orders_time ON orders(order_time);
+
+-- ============================
+-- 7. BẢNG CHI TIẾT ĐƠN HÀNG
+--    - Chi tiết món, số lượng, đơn giá bán tại thời điểm đó
+--    - Doanh thu = SUM(quantity * unit_price) trong query
+-- ============================
+CREATE TABLE order_detail (
+    id            BIGINT PRIMARY KEY AUTO_INCREMENT,
+    order_id      BIGINT NOT NULL,
+    dish_id       BIGINT NOT NULL,
+    quantity      INT NOT NULL,
+    unit_price    DECIMAL(15,2) NOT NULL,              -- Giá tại thời điểm bán
+    CONSTRAINT fk_order_detail_order
         FOREIGN KEY (order_id) REFERENCES orders(id)
-);
+        ON DELETE CASCADE,
+    CONSTRAINT fk_order_detail_dish
+        FOREIGN KEY (dish_id) REFERENCES dish(id)
+) ENGINE = InnoDB;
+
+CREATE INDEX idx_order_detail_order ON order_detail(order_id);
+CREATE INDEX idx_order_detail_dish  ON order_detail(dish_id);
