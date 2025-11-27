@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/header :: head"></head>
+
+<body>
+
+<div th:replace="layout/header :: menu"></div>
+
+<h1>Quản lý khách hàng</h1>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Họ tên</th>
+        <th>Địa chỉ</th>
+        <th>Số điện thoại</th>
+        <th>Ngày tạo</th>
+    </tr>
+
+    <tr th:if="${#lists.isEmpty(customers)}">
+        <td colspan="5" style="text-align: center;">Chưa có khách hàng nào</td>
+    </tr>
+
+    <tr th:each="c : ${customers}">
+        <td th:text="${c.id}"></td>
+        <td th:text="${c.fullName}"></td>
+        <td th:text="${c.address}"></td>
+        <td th:text="${c.phone}"></td>
+        <td th:text="${#temporals.format(c.createdAt,'dd/MM/yyyy HH:mm')}"></td>
+    </tr>
+</table>
+
+
+</body>
+</html>

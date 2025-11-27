@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/header :: head"></head>
+
+<body>
+
+<div th:replace="layout/header :: menu"></div>
+
+<h1>Quản lý bàn</h1>
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Tên bàn</th>
+        <th>Số ghế</th>
+        <th>Trạng thái</th>
+    </tr>
+
+    <tr th:if="${#lists.isEmpty(tables)}">
+        <td colspan="4" style="text-align: center;">Chưa có bàn nào</td>
+    </tr>
+
+    <tr th:each="t : ${tables}">
+        <td th:text="${t.id}"></td>
+        <td th:text="${t.tableName}"></td>
+        <td th:text="${t.seats}"></td>
+        <td th:text="${t.status}"></td>
+    </tr>
+</table>
+
+
+</body>
+</html>

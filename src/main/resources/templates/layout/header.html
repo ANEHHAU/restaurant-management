@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head">
+    <meta charset="UTF-8">
+    <title th:text="${title}">Restaurant System</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+        }
+
+        .menu {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .menu a {
+            display: inline-block;
+            margin-right: 12px;
+            padding: 6px 14px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 999px;      /* giống pill button */
+            border: 1px solid #ddd;
+            background: #ffffff;
+            color: #333;
+            box-shadow: none;
+            transition: background 0.2s ease, color 0.2s ease,
+            box-shadow 0.2s ease, transform 0.1s ease;
+        }
+
+        /* Hover: đổ bóng + nhích nhẹ lên */
+        .menu a:hover {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+
+        /* Nút đang ở TRANG HIỆN TẠI */
+        .menu a.active {
+            background: #007bff;
+            color: #ffffff;
+            border-color: #007bff;
+            box-shadow: 0 3px 10px rgba(0,123,255,0.45);
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+
+        th {
+            background: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body th:fragment="header">
+<div th:fragment="menu" class="menu">
+    <a href="/">Trang chủ</a>
+    <a href="/tables">Quản lý bàn</a>
+    <a href="/customers">Quản lý khách hàng</a>
+    <a href="/orders">Quản lý đơn hàng</a>
+
+    <script>
+        // Tự động đánh dấu nút đang ở trang hiện tại
+        document.addEventListener('DOMContentLoaded', function () {
+            const pathRaw = window.location.pathname || '/';
+            // bỏ / cuối nếu có, ví dụ /tables/ -> /tables
+            const cleaned = pathRaw.replace(/\/+$/, '') || '/';
+
+            const links = document.querySelectorAll('.menu a');
+
+            links.forEach(link => {
+                const href = link.getAttribute('href'); // /, /tables, /customers, /orders
+
+                // Trang chủ
+                if (href === '/') {
+                    if (cleaned === '/' || cleaned.endsWith('/index')) {
+                        link.classList.add('active');
+                    }
+                    return;
+                }
+
+                // Các trang còn lại: nếu URL kết thúc bằng href hoặc chứa /{href}/
+                if (cleaned.endsWith(href) || cleaned.includes(href + '/')) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</div>
+</body>
+</html>

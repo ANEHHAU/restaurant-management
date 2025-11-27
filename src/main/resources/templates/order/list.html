@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/header :: head"></head>
+
+<body>
+
+<div th:replace="layout/header :: menu"></div>
+
+<h1>Quản lý đơn hàng</h1>
+
+<table>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Khách hàng</th>
+            <th>Bàn</th>
+            <th>Thời gian</th>
+            <th>Trạng thái</th>
+        </tr>
+
+        <!-- Nếu danh sách rỗng hoặc null -->
+        <tr th:if="${#lists.isEmpty(orders)}">
+            <td colspan="5" style="text-align: center;">Chưa có đơn hàng nào</td>
+        </tr>
+
+        <!-- Nếu có dữ liệu thì lặp -->
+        <tr th:each="o : ${orders}">
+            <td th:text="${o.id}"></td>
+
+            <td>
+                <span th:if="${o.customer != null}" th:text="${o.customer.fullName}"></span>
+                <span th:if="${o.customer == null}">Khách vãng lai</span>
+            </td>
+
+            <td th:text="${o.table != null ? o.table.tableName : 'Không'}"></td>
+            <td th:text="${#temporals.format(o.orderTime,'dd/MM/yyyy HH:mm')}"></td>
+            <td th:text="${o.status}"></td>
+        </tr>
+    </table>
+
+</table>
+
+</body>
+</html>

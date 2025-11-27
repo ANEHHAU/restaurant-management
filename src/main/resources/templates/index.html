@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/header :: head"></head>
+
+<body>
+
+<div th:replace="layout/header :: menu"></div>
+
+<h1>Hệ thống quản lý nhà hàng</h1>
+
+<div>
+    <h3>Thống kê nhanh</h3>
+    <ul>
+        <li>Tổng số bàn: <b th:text="${totalTables}"></b></li>
+        <li>Tổng khách hàng: <b th:text="${totalCustomers}"></b></li>
+        <li>Tổng đơn hàng: <b th:text="${totalOrders}"></b></li>
+    </ul>
+</div>
+
+</body>
+</html>
