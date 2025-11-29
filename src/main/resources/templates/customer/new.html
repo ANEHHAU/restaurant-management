@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout/header :: head"></head>
+
+    <meta charset="UTF-8">
+    <title>Thêm khách hàng mới</title>
+
+    <style>
+        body { font-family: Arial; margin: 30px; }
+        h2 { margin-bottom: 20px; }
+
+        form { max-width: 450px; }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 12px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 6px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        button:hover { background: #1e7e34; }
+
+        .back-link {
+            margin-top: 15px;
+            display: inline-block;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+
+<body>
+<div th:replace="layout/header :: menu"></div>
+<h2>Thêm khách hàng mới</h2>
+<form id="customerForm">
+
+    <label>Họ tên khách hàng:</label>
+    <input type="text" id="fullName" placeholder="Nhập họ tên..." required>
+
+    <label>Số điện thoại:</label>
+    <input type="text" id="phone" placeholder="Nhập số điện thoại..." required>
+
+    <label>Địa chỉ:</label>
+    <textarea id="address" placeholder="Nhập địa chỉ..." rows="3"></textarea>
+
+    <button type="button" onclick="saveCustomer()">Lưu khách hàng</button>
+</form>
+
+<script>
+
+    async function saveCustomer() {
+
+        let fullName = document.getElementById("fullName").value;
+        let phone = document.getElementById("phone").value;
+
+        if (!fullName.trim()) {
+            alert("Tên khách hàng không được để trống!");
+            return;
+        }
+
+        if (!phone.trim()) {
+            alert("Số điện thoại không được để trống!");
+            return;
+        }
+
+        // Regex 10 số đầu 0
+        let phoneRegex = /^0\d{9}$/;
+        if (!phoneRegex.test(phone)) {
+            alert("Số điện thoại không hợp lệ! (phải gồm 10 số và bắt đầu bằng 0)");
+            return;
+        }
+
+        let data = {
+            fullName: fullName,
+            phone: phone,
+            address: document.getElementById("address").value
+        };
+
+        let res = await fetch("/customers/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+            alert("Tạo khách hàng thành công!");
+            window.location.href = "/customers";
+        } else {
+            let msg = await res.text();
+            alert("Lỗi: " + msg);
+        }
+    }
+
+</script>
+
+</body>
+</html>

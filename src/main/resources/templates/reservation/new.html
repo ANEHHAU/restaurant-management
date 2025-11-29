@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout/header :: head"></head>
+
+    <meta charset="UTF-8">
+    <title>Đặt bàn</title>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 30px;
+            padding: 0;
+            background: #fafafa;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 30px auto;
+            background: #fff;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .section {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 20px;
+            background: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        input[type=text],
+        input[type=date],
+        input[type=time],
+        input[type=number] {
+            padding: 9px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 15px;
+        }
+
+        input[type=text],
+        input[type=date],
+        input[type=time] {
+            width: 260px;
+        }
+
+        input[type=number] {
+            width: 100px;
+        }
+
+        button {
+            padding: 9px 18px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        button:hover { background: #005fcc; }
+
+        .btn-new {
+            background: #28a745;
+        }
+        .btn-new:hover { background: #218838; }
+
+        .table-grid {
+            display: grid;
+            margin-top: 15px;
+            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        }
+
+        .table-item {
+            border: 2px solid #aaa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .table-item:hover { border-color: #007bff; }
+        .table-item.selected {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .disabled {
+            position: relative;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .disabled::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.6);
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+<div th:replace="layout/header :: menu"></div>
+<div class="container">
+
+    <!-- Header + nút khách mới -->
+    <div class="header">
+        <h2 style="margin:0;">Đặt bàn nhà hàng</h2>
+        <a href="/customers/new">
+            <button class="btn-new">Khách hàng mới</button>
+        </a>
+    </div>
+
+    <!-- SECTION 1: Thông tin khách hàng -->
+    <div class="section">
+        <h3>1. Thông tin khách hàng</h3>
+
+        <div class="form-group">
+            <label>Số điện thoại</label>
+            <div class="input-row">
+                <input id="phone" type="text" placeholder="Nhập SĐT..." oninput="resetCustomer()">
+                <button type="button" onclick="findCustomer()">Tìm khách</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Tên khách hàng</label>
+            <input id="customerName" type="text" readonly placeholder="Chưa có dữ liệu">
+        </div>
+
+        <input id="customerId" type="hidden">
+    </div>
+
+    <!-- SECTION 2: Thời gian & số khách -->
+    <div id="secTime" class="section disabled">
+        <h3>2. Thời gian & số khách</h3>
+
+        <div class="form-group">
+            <label>Ngày</label>
+            <input id="date" type="date">
+        </div>
+
+        <div class="form-group">
+            <label>Giờ bắt đầu</label>
+            <input id="timeStart" type="time">
+        </div>
+
+        <div class="form-group">
+            <label>Số khách</label>
+            <div class="input-row">
+                <input id="numPeople" type="number" min="1" placeholder="VD: 4">
+                <button type="button" onclick="searchTables()">Tìm bàn trống</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 3: Chọn bàn -->
+    <div id="secTable" class="section disabled">
+        <h3>3. Chọn bàn</h3>
+        <div id="tables" class="table-grid"></div>
+
+        <div style="margin-top: 20px; text-align: right;">
+            <button onclick="confirmBooking()" style="padding: 10px 30px; font-size: 16px;">
+                Xác nhận đặt bàn
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let selectedTableId = null;
+
+    function resetCustomer() {
+        document.getElementById("customerName").value = "";
+        document.getElementById("customerId").value = "";
+        document.getElementById("secTime").classList.add("disabled");
+        document.getElementById("secTable").classList.add("disabled");
+        document.getElementById("tables").innerHTML = "";
+        selectedTableId = null;
+    }
+
+    async function findCustomer() {
+        const phone = document.getElementById("phone").value.trim();
+        if (!phone) return alert("Vui lòng nhập số điện thoại");
+
+        const res = await fetch(`/api/customer/find?phone=${phone}`);
+        const data = await res.json();
+
+        if (!data.id) {
+            resetCustomer();
+            alert("Không tìm thấy khách hàng này!");
+        } else {
+            document.getElementById("customerName").value = data.name;
+            document.getElementById("customerId").value = data.id;
+            document.getElementById("secTime").classList.remove("disabled");
+        }
+    }
+
+    async function searchTables() {
+        const payload = {
+            date: document.getElementById("date").value,
+            timeStart: document.getElementById("timeStart").value,
+            numPeople: document.getElementById("numPeople").value,
+            customerId: document.getElementById("customerId").value
+        };
+
+        if (!payload.date || !payload.timeStart || !payload.numPeople) {
+            return alert("Vui lòng nhập đầy đủ ngày, giờ và số khách");
+        }
+
+        const res = await fetch("/api/booking/available-tables", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const tables = await res.json();
+        renderTables(tables);
+        document.getElementById("secTable").classList.remove("disabled");
+    }
+
+    function renderTables(tables) {
+        const container = document.getElementById("tables");
+        container.innerHTML = "";
+
+        tables.forEach(t => {
+            const div = document.createElement("div");
+            div.className = "table-item";
+            div.innerHTML = `<strong>${t.tableName}</strong><br>Ghế: ${t.seats}`;
+            div.onclick = () => selectTable(div, t.id);
+            container.appendChild(div);
+        });
+    }
+
+    function selectTable(el, id) {
+        document.querySelectorAll(".table-item").forEach(x => x.classList.remove("selected"));
+        el.classList.add("selected");
+        selectedTableId = id;
+    }
+
+    async function confirmBooking() {
+        if (!selectedTableId) return alert("Vui lòng chọn một bàn!");
+
+        const payload = {
+            customerId: document.getElementById("customerId").value,
+            date: document.getElementById("date").value,
+            timeStart: document.getElementById("timeStart").value,
+            numPeople: document.getElementById("numPeople").value,
+            selectedTableId: selectedTableId
+        };
+
+        const res = await fetch("/api/booking/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const msg = await res.text();
+        if (msg === "SUCCESS") {
+            alert("Đặt bàn thành công!");
+            location.href = "/booking";
+        } else {
+            alert("Đặt bàn thất bại: " + msg);
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/header :: head"></head>
+
+<body>
+
+<div th:replace="layout/header :: menu"></div>
+
+<h1>Danh sách Đặt bàn (Reservations)</h1>
+
+<table border="1" cellspacing="0" cellpadding="8">
+    <tr>
+        <th>ID</th>
+        <th>Tên khách hàng</th>
+        <th>Số điện thoại</th>
+        <th>Bàn số</th>
+        <th>Thời gian bắt đầu</th>
+        <th>Thời gian kết thúc</th>
+        <th>Số người</th>
+        <th>Trạng thái</th>
+        <th>Ghi chú</th>
+        <th>Ngày tạo</th>
+    </tr>
+
+    <!-- Trường hợp không có reservation -->
+    <tr th:if="${#lists.isEmpty(reservations)}">
+        <td colspan="10" style="text-align:center;">Chưa có đặt bàn nào</td>
+    </tr>
+
+    <!-- Duyệt danh sách reservation -->
+    <tr th:each="r : ${reservations}">
+        <td th:text="${r.id}"></td>
+
+        <!-- Tên khách hàng -->
+        <td th:text="${r.customer.fullName}"></td>
+
+        <!-- Số điện thoại khách -->
+        <td th:text="${r.customer.phone}"></td>
+
+        <!-- Bàn -->
+        <td th:text="${r.table.tableName}"></td>
+
+        <!-- Thời gian bắt đầu -->
+        <td th:text="${#temporals.format(r.reservationStart,'dd/MM/yyyy HH:mm')}"></td>
+
+        <!-- Thời gian kết thúc -->
+        <td th:text="${#temporals.format(r.reservationEnd,'dd/MM/yyyy HH:mm')}"></td>
+
+        <td th:text="${r.numPeople}"></td>
+
+        <td th:text="${r.status}"></td>
+
+        <td th:text="${r.note}"></td>
+
+        <td th:text="${#temporals.format(r.createdAt,'dd/MM/yyyy HH:mm')}"></td>
+    </tr>
+
+</table>
+
+</body>
+</html>

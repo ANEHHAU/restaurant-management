@@ -1,0 +1,79 @@
+-- BƯỚC 1: Tắt tạm strict mode + cho phép zero date (chỉ trong phiên này thôi)
+SET SESSION sql_mode = '';
+SET SESSION sql_mode = 'NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+USE restaurant_db;
+
+-- ==================================================================
+-- BÂY GIỜ INSERT DỮ LIỆU MẪU - ĐẢM BẢO 100% KHÔNG LỖI
+-- ==================================================================
+
+INSERT INTO restaurant_table (table_name, seats, status) VALUES
+('A01',4,'ACTIVE'),('A02',6,'ACTIVE'),('A03',2,'ACTIVE'),('A04',8,'ACTIVE'),('A05',10,'ACTIVE'),
+('B01',4,'ACTIVE'),('B02',6,'INACTIVE'),('VIP1',12,'ACTIVE'),('VIP2',8,'ACTIVE'),('TERRACE01',4,'ACTIVE');
+
+INSERT INTO customer (full_name, address, phone) VALUES
+('Nguyễn Văn An','123 Lê Lợi, Q.1','0909123456'),
+('Trần Thị Bình','45 Hai Bà Trưng, Q.3','0918234567'),
+('Lê Minh Châu','789 Nguyễn Huệ, Q.1','0935345678'),
+('Phạm Quốc Cường',NULL,'0948456789'),
+('Huỳnh Thị Dung','56 Trần Hưng Đạo, Q.5','0987564321'),
+('Võ Văn Em','101 CMT8, Q.3','0978654321'),
+('Đặng Ngọc Lan','23 Lý Tự Trọng, Q.1','0923456781'),
+('Bùi Xuân Mai',NULL,NULL),
+('Hoàng Anh Khoa','88 Pasteur, Q.3','0912345678'),
+('Trương Ngọc Linh','567 Võ Văn Tần, Q.3','0903456789');
+
+INSERT INTO dish (dish_name, category, unit_price, is_active) VALUES
+('Phở bò tái nạm','Món chính',85000,1),
+('Bún bò Huế','Món chính',80000,1),
+('Cơm tấm sườn bì chả','Món chính',75000,1),
+('Gỏi cuốn tôm thịt','Khai vị',45000,1),
+('Cánh gà chiên mắm','Khai vị',120000,1),
+('Lẩu Thái hải sản','Lẩu',450000,1),
+('Coca Cola','Nước uống',20000,1),
+('Trà đá','Nước uống',10000,1),
+('Bia Sài Gòn','Nước uống',25000,0),
+('Bánh mì pate','Món chính',35000,0);
+
+INSERT INTO reservation (customer_id, table_id, reservation_start, reservation_end, num_people, status, note) VALUES
+(1,1,'2025-12-01 18:00:00','2025-12-01 20:00:00',4,'CONFIRMED','Kỷ niệm ngày cưới'),
+(2,2,'2025-12-01 19:00:00','2025-12-01 21:30:00',6,'CONFIRMED',NULL),
+(3,8,'2025-12-02 12:00:00','2025-12-02 14:00:00',10,'PENDING','Sinh nhật công ty'),
+(4,4,'2025-12-02 18:30:00','2025-12-02 20:30:00',8,'CANCELLED','Khách huỷ'),
+(5,5,'2025-12-03 11:30:00','2025-12-03 13:30:00',12,'CONFIRMED','Tiệc gia đình'),
+(6,1,'2025-12-03 19:00:00','2025-12-03 21:00:00',4,'COMPLETED',NULL),
+(7,3,'2025-12-04 17:00:00','2025-12-04 19:00:00',2,'CONFIRMED','Hẹn hò'),
+(1,6,'2025-12-05 18:00:00','2025-12-05 20:30:00',4,'PENDING',NULL),
+(9,9,'2025-12-05 20:00:00','2025-12-05 22:30:00',8,'CONFIRMED','Tiệc cuối năm'),
+(10,10,'2025-11-30 12:00:00','2025-11-30 14:00:00',4,'COMPLETED',NULL);
+
+INSERT INTO orders (customer_id, table_id, reservation_id, order_time, status, guest_count, note) VALUES
+(1,1,1,'2025-12-01 18:15:00','COMPLETED',4,NULL),
+(2,2,2,'2025-12-01 19:10:00','COMPLETED',6,'Thêm đá'),
+(8,3,NULL,'2025-12-01 12:30:00','COMPLETED',2,'Khách vãng lai'),
+(4,4,NULL,'2025-12-01 20:00:00','IN_PROGRESS',7,NULL),
+(5,5,5,'2025-12-03 11:45:00','NEW',12,'Tiệc lớn'),
+(6,1,6,'2025-12-03 19:05:00','COMPLETED',4,NULL),
+(NULL,6,NULL,'2025-12-02 13:00:00','COMPLETED',3,'Khách vãng lai không có thông tin'),
+(3,8,3,'2025-12-02 12:05:00','CANCELLED',NULL,'Công ty huỷ đột xuất'),
+(9,9,9,'2025-12-05 20:10:00','IN_PROGRESS',8,'Yêu cầu ít cay'),
+(10,10,10,'2025-11-30 12:10:00','COMPLETED',4,NULL);
+
+INSERT INTO order_detail (order_id, dish_id, quantity, unit_price) VALUES
+(1,1,4,85000),(1,4,8,45000),(1,7,6,20000),
+(2,2,6,80000),(2,5,2,120000),(2,6,1,450000),(2,8,10,10000),
+(3,3,2,75000),(3,7,2,20000),
+(4,1,5,85000),(4,5,3,120000),(4,8,8,10000),
+(5,6,2,450000),(5,1,8,85000),(5,2,6,80000),(5,5,4,120000),(5,7,15,20000),
+(6,3,4,75000),(6,4,8,45000),
+(7,1,1,85000),(7,7,1,20000),(7,8,2,10000),
+(8,2,10,80000),(8,6,1,450000),
+(9,6,1,450000),(9,5,5,120000),(9,1,6,85000),(9,7,10,20000),
+(10,3,4,75000),(10,4,8,45000),(10,8,6,10000);
+
+-- KIỂM TRA NHANH
+SELECT 'DỮ LIỆU ĐÃ ĐƯỢC THÊM THÀNH CÔNG!' AS Ket_qua;
+SELECT COUNT(*) AS So_ban FROM restaurant_table;
+SELECT COUNT(*) AS So_khach FROM customer;
+SELECT COUNT(*) AS So_don_hang FROM orders;

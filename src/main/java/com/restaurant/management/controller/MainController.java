@@ -1,5 +1,6 @@
 package com.restaurant.management.controller;
 
+import com.restaurant.management.repository.ReservationRepository;
 import com.restaurant.management.repository.RestaurantTableRepository;
 import com.restaurant.management.repository.CustomerRepository;
 import com.restaurant.management.repository.OrderRepository;
@@ -15,6 +16,7 @@ public class MainController {
     private final RestaurantTableRepository tableRepository;
     private final CustomerRepository customerRepository;
     private final OrderRepository orderRepository;
+    private final ReservationRepository reservationRepository;
 
     // Trang chính: menu dẫn tới 3 màn
     @GetMapping("/")
@@ -45,4 +47,12 @@ public class MainController {
         model.addAttribute("orders", orderRepository.findAll());
         return "order/list"; // templates/order/list.html
     }
+
+    // Quản lý đặt bàn: hiện full danh sách đặt bàn
+    @GetMapping("/reservations")
+    public String listReservations(Model model) {
+        model.addAttribute("reservations", reservationRepository.findAll());
+        return "reservation/list"; // templates/order/list.html
+    }
+
 }

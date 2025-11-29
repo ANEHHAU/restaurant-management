@@ -5,6 +5,52 @@
     <title th:text="${title}">Restaurant System</title>
 
     <style>
+
+        .menu {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            position: relative;
+        }
+
+        .menu-item {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Submenu */
+        .submenu {
+            position: absolute;
+            top: 100%;           /* Sát ngay dưới menu cha */
+            left: 0;
+            display: none;
+            flex-direction: column;     /* mỗi dòng 1 item */
+            background: #fff;
+            border: 1px solid #ddd;
+            min-width: 180px;
+            border-radius: 8px;
+            padding: 6px 0;
+            z-index: 999;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        /* Hiển thị submenu khi hover */
+        .menu-item:hover .submenu {
+            display: flex !important;   /* luôn hiện khi hover menu hoặc submenu */
+        }
+
+        .submenu a {
+            padding: 10px 15px;
+            display: block;
+            white-space: nowrap;        /* không xuống hàng */
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .submenu a:hover {
+            background: #f2f2f2;
+        }
         body {
             font-family: Arial, sans-serif;
             margin: 30px;
@@ -64,10 +110,49 @@
 
 <body th:fragment="header">
 <div th:fragment="menu" class="menu">
-    <a href="/">Trang chủ</a>
-    <a href="/tables">Quản lý bàn</a>
-    <a href="/customers">Quản lý khách hàng</a>
-    <a href="/orders">Quản lý đơn hàng</a>
+    <div class="menu-item">
+        <a href="/">Trang chủ</a>
+    </div>
+
+    <!-- QUẢN LÝ BÀN -->
+    <div class="menu-item">
+        <a href="/tables">Quản lý bàn</a>
+        <div class="submenu">
+            <a href="/tables/new">➕ Thêm mới</a>
+            <a href="/tables/edit">✏️ Sửa</a>
+            <a href="/tables/delete">🗑 Xóa</a>
+        </div>
+    </div>
+
+    <!-- KHÁCH HÀNG -->
+    <div class="menu-item">
+        <a href="/customers">Quản lý khách hàng</a>
+        <div class="submenu">
+            <a href="/customers/new">➕ Thêm mới</a>
+            <a href="/customers/edit">✏️ Sửa</a>
+            <a href="/customers/delete">🗑 Xóa</a>
+        </div>
+    </div>
+
+    <!-- ĐƠN HÀNG -->
+    <div class="menu-item">
+        <a href="/orders">Quản lý đơn hàng</a>
+        <div class="submenu">
+            <a href="/orders/new">➕ Thêm mới</a>
+            <a href="/orders/edit">✏️ Sửa</a>
+            <a href="/orders/delete">🗑 Xóa</a>
+        </div>
+    </div>
+
+    <!-- ĐẶT BÀN -->
+    <div class="menu-item">
+        <a href="/reservations">Quản lý đặt bàn</a>
+        <div class="submenu">
+            <a href="/reservations/new">➕ Thêm mới</a>
+            <a href="/reservations/edit">✏️ Sửa</a>
+            <a href="/reservations/delete">🗑 Xóa</a>
+        </div>
+    </div>
 
     <script>
         // Tự động đánh dấu nút đang ở trang hiện tại
