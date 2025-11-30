@@ -1,294 +1,265 @@
+
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="layout/header :: head"></head>
 
-    <meta charset="UTF-8">
-    <title>Đặt bàn</title>
+<style>
+    body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f7fa;margin:0;padding:20px;color:#333;}
+    h1{text-align:center;color:#1a4971;margin:15px 0 8px;font-size:2.3rem;font-weight:600;}
+    .page-desc{text-align:center;color:#666;margin-bottom:40px;font-size:1.1rem;}
+    .booking-container{max-width:950px;margin:0 auto;background:white;border-radius:16px;
+        box-shadow:0 10px 35px rgba(0,0,0,0.12);overflow:hidden;}
+    .booking-header{background:#1976d2;color:white;padding:20px 30px;display:flex;
+        justify-content:space-between;align-items:center;}
+    .booking-header h2{margin:0;font-size:1.8rem;font-weight:600;}
+    .btn-new-customer{background:#28a745;color:white;padding:10px 20px;border:none;
+        border-radius:8px;font-weight:600;text-decoration:none;transition:0.3s;}
+    .btn-new-customer:hover{background:#218838;transform:translateY(-2px);}
+    .section{padding:30px 40px;border-bottom:1px solid #eee;}
+    .section:last-child{border-bottom:none;}
+    .section.disabled{opacity:0.5;pointer-events:none;}
+    .section h3{color:#1976d2;margin:0 0 25px 0;font-size:1.4rem;font-weight:600;}
+    .form-group{margin-bottom:22px;}
+    label{font-weight:600;color:#1a4971;margin-bottom:8px;display:block;}
+    input,select{width:100%;padding:14px 16px;border:2px solid #e0e0e0;border-radius:10px;
+        font-size:15px;transition:all 0.3s;box-sizing:border-box;}
+    input:focus,select:focus{outline:none;border-color:#1976d2;
+        box-shadow:0 0 0 4px rgba(25,118,210,0.15);}
+    .input-row{display:flex;gap:15px;align-items:end;flex-wrap:wrap;}
+    .input-row input{flex:1;min-width:220px;}
+    .input-row button{padding:14px 24px;background:#1976d2;color:white;border:none;
+        border-radius:10px;font-weight:600;cursor:pointer;}
+    .input-row button:hover{background:#1565c0;}
+    .table-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+        gap:18px;margin-top:10px;}
+    .table-item{background:#f8fbff;border:2px solid #bbdefb;border-radius:12px;padding:20px;
+        text-align:center;cursor:pointer;transition:all 0.3s;font-weight:600;}
+    .table-item:hover{border-color:#1976d2;transform:translateY(-4px);
+        box-shadow:0 8px 20px rgba(25,118,210,0.2);}
+    .table-item.selected{background:#d4edda;border-color:#28a745;color:#155724;}
+    .table-item .seats{font-size:0.9em;color:#666;margin-top:6px;}
+    .confirm-btn{width:100%;padding:16px;background:#28a745;color:white;border:none;
+        border-radius:12px;font-size:1.2rem;font-weight:600;cursor:pointer;margin-top:20px;
+        transition:0.3s;}
+    .confirm-btn:hover{background:#218838;transform:translateY(-3px);}
+    .confirm-btn:disabled{background:#aaa;cursor:not-allowed;}
+    .toast{position:fixed;top:20px;right:20px;min-width:320px;padding:16px 20px;
+        border-radius:12px;color:white;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.2);
+        transform:translateX(400px);opacity:0;transition:all 0.4s cubic-bezier(0.68,-0.55,0.265,1.55);
+        z-index:10000;display:flex;align-items:center;gap:12px;}
+    .toast.show{transform:translateX(0);opacity:1;}
+    .toast.success{background:#4caf50;}
+    .toast.error{background:#f44336;}
+    .toast .close-toast{margin-left:auto;cursor:pointer;font-size:20px;opacity:0.8;}
+</style>
 
-    <style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            margin: 30px;
-            padding: 0;
-            background: #fafafa;
-        }
-
-        .container {
-            max-width: 850px;
-            margin: 30px auto;
-            background: #fff;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .section {
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin: 20px;
-            background: #fff;
-        }
-
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        label {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 6px;
-        }
-
-        .input-row {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        input[type=text],
-        input[type=date],
-        input[type=time],
-        input[type=number] {
-            padding: 9px 12px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 15px;
-        }
-
-        input[type=text],
-        input[type=date],
-        input[type=time] {
-            width: 260px;
-        }
-
-        input[type=number] {
-            width: 100px;
-        }
-
-        button {
-            padding: 9px 18px;
-            background: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 15px;
-        }
-        button:hover { background: #005fcc; }
-
-        .btn-new {
-            background: #28a745;
-        }
-        .btn-new:hover { background: #218838; }
-
-        .table-grid {
-            display: grid;
-            margin-top: 15px;
-            gap: 15px;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        }
-
-        .table-item {
-            border: 2px solid #aaa;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .table-item:hover { border-color: #007bff; }
-        .table-item.selected {
-            background: #d4edda;
-            border-color: #28a745;
-        }
-
-        .disabled {
-            position: relative;
-            opacity: 0.5;
-            pointer-events: none;
-        }
-        .disabled::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: rgba(255,255,255,0.6);
-            border-radius: 8px;
-        }
-    </style>
-</head>
 <body>
 <div th:replace="layout/header :: menu"></div>
-<div class="container">
 
-    <!-- Header + nút khách mới -->
-    <div class="header">
-        <h2 style="margin:0;">Đặt bàn nhà hàng</h2>
-        <a href="/customers/new">
-            <button class="btn-new">Khách hàng mới</button>
-        </a>
+<h1>Đặt bàn nhà hàng</h1>
+<p class="page-desc">Nhập số điện thoại → nhấn Tìm khách → chọn thời gian → chọn bàn</p>
+
+<div class="booking-container">
+    <div class="booking-header">
+        <h2>Đặt bàn mới</h2>
+        <a th:href="@{/customers/new}" class="btn-new-customer">Khách hàng mới</a>
     </div>
 
-    <!-- SECTION 1: Thông tin khách hàng -->
+    <!-- 1. Thông tin khách hàng -->
     <div class="section">
         <h3>1. Thông tin khách hàng</h3>
-
         <div class="form-group">
-            <label>Số điện thoại</label>
+            <label>Số điện thoại <span style="color:#e53935;">*</span></label>
             <div class="input-row">
-                <input id="phone" type="text" placeholder="Nhập SĐT..." oninput="resetCustomer()">
+                <input type="text" id="phone" placeholder="Nhập số điện thoại..." maxlength="10">
                 <button type="button" onclick="findCustomer()">Tìm khách</button>
             </div>
         </div>
-
         <div class="form-group">
             <label>Tên khách hàng</label>
-            <input id="customerName" type="text" readonly placeholder="Chưa có dữ liệu">
+            <input type="text" id="customerName" readonly placeholder="Nhấn 'Tìm khách' để hiển thị">
         </div>
-
-        <input id="customerId" type="hidden">
+        <input type="hidden" id="customerId">
     </div>
 
-    <!-- SECTION 2: Thời gian & số khách -->
-    <div id="secTime" class="section disabled">
-        <h3>2. Thời gian & số khách</h3>
-
+    <!-- 2. Thời gian & số khách -->
+    <div class="section disabled" id="secTime">
+        <h3>2. Chọn thời gian & số khách</h3>
         <div class="form-group">
-            <label>Ngày</label>
-            <input id="date" type="date">
+            <label>Ngày đặt bàn <span style="color:#e53935;">*</span></label>
+            <input type="date" id="date" onchange="updateTimeOptions()">
         </div>
-
         <div class="form-group">
-            <label>Giờ bắt đầu</label>
-            <input id="timeStart" type="time">
+            <label>Giờ bắt đầu <span style="color:#e53935;">*</span></label>
+            <select id="timeStart"></select>
         </div>
-
         <div class="form-group">
-            <label>Số khách</label>
+            <label>Số khách <span style="color:#e53935;">*</span></label>
             <div class="input-row">
-                <input id="numPeople" type="number" min="1" placeholder="VD: 4">
+                <input type="number" id="numPeople" min="1" placeholder="VD: 4">
                 <button type="button" onclick="searchTables()">Tìm bàn trống</button>
             </div>
         </div>
     </div>
 
-    <!-- SECTION 3: Chọn bàn -->
-    <div id="secTable" class="section disabled">
+    <!-- 3. Chọn bàn -->
+    <div class="section disabled" id="secTable">
         <h3>3. Chọn bàn</h3>
         <div id="tables" class="table-grid"></div>
-
-        <div style="margin-top: 20px; text-align: right;">
-            <button onclick="confirmBooking()" style="padding: 10px 30px; font-size: 16px;">
-                Xác nhận đặt bàn
-            </button>
-        </div>
+        <button type="button" class="confirm-btn" onclick="confirmBooking()" id="btnConfirm" disabled>
+            Xác nhận đặt bàn
+        </button>
     </div>
-
 </div>
 
+<div id="toastContainer"></div>
+
 <script>
+    function showToast(msg, type = 'success') {
+        const c = document.getElementById('toastContainer');
+        const t = document.createElement('div');
+        t.className = `toast ${type}`;
+        t.innerHTML = `<span>${type==='success'?'Thành công':'Lỗi'}</span><span>${msg}</span>
+                       <span class="close-toast" onclick="this.parentElement.remove()">×</span>`;
+        c.appendChild(t);
+        setTimeout(() => t.classList.add('show'), 100);
+        setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 500); }, 4000);
+    }
+
     let selectedTableId = null;
 
-    function resetCustomer() {
+    // ĐÃ FIX: Gõ/sửa/xóa ô SĐT → xóa tên + khóa phần dưới ngay lập tức
+    document.getElementById("phone").addEventListener("input", function () {
         document.getElementById("customerName").value = "";
         document.getElementById("customerId").value = "";
         document.getElementById("secTime").classList.add("disabled");
         document.getElementById("secTable").classList.add("disabled");
         document.getElementById("tables").innerHTML = "";
+        document.getElementById("btnConfirm").disabled = true;
         selectedTableId = null;
-    }
+    });
 
     async function findCustomer() {
         const phone = document.getElementById("phone").value.trim();
-        if (!phone) return alert("Vui lòng nhập số điện thoại");
+        if (!phone) return showToast("Vui lòng nhập số điện thoại", "error");
 
-        const res = await fetch(`/api/customer/find?phone=${phone}`);
-        const data = await res.json();
+        try {
+            const res = await fetch(`/reservation/findCustomer?phone=${phone}`);
+            const data = await res.json();
 
-        if (!data.id) {
-            resetCustomer();
-            alert("Không tìm thấy khách hàng này!");
-        } else {
-            document.getElementById("customerName").value = data.name;
-            document.getElementById("customerId").value = data.id;
-            document.getElementById("secTime").classList.remove("disabled");
+            if (!data.id) {
+                document.getElementById("customerName").value = "";
+                document.getElementById("customerId").value = "";
+                showToast("Không tìm thấy khách hàng", "error");
+            } else {
+                document.getElementById("customerName").value = data.name || data.fullName || "Khách mới";
+                document.getElementById("customerId").value = data.id;
+                document.getElementById("secTime").classList.remove("disabled");
+                showToast("Tìm thấy khách hàng!", "success");
+            }
+        } catch (e) {
+            showToast("Lỗi kết nối", "error");
         }
     }
+
+    // ĐÃ FIX HOÀN HẢO: 8h12 → chỉ hiện từ 8:30 trở đi
+    function updateTimeOptions() {
+        const select = document.getElementById('timeStart');
+        select.innerHTML = '<option value="" disabled selected>Chọn giờ</option>';
+        const selectedDate = document.getElementById('date').value;
+        const today = new Date().toISOString().split('T')[0];
+        const isToday = selectedDate === today;
+
+        let startHour = 8;
+        let allow30 = true;
+
+        if (isToday) {
+            const now = new Date();
+            startHour = now.getHours();
+            if (now.getMinutes() >= 30) {
+                startHour++;
+                allow30 = false;
+            }
+        }
+
+        for (let h = startHour; h <= 21; h++) {
+            const hh = h.toString().padStart(2, '0');
+            if (h >= startHour) select.innerHTML += `<option value="${hh}:00">${hh}:00</option>`;
+            if (h < 21 && (h > startHour || allow30)) {
+                select.innerHTML += `<option value="${hh}:30">${hh}:30</option>`;
+            }
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').min = today;
+        document.getElementById('date').value = today;
+        updateTimeOptions();
+    });
+
+
+    document.getElementById("date").addEventListener("change", updateTimeOptions);
+
+
+    // logic tìm
 
     async function searchTables() {
         const payload = {
             date: document.getElementById("date").value,
             timeStart: document.getElementById("timeStart").value,
             numPeople: document.getElementById("numPeople").value,
-            customerId: document.getElementById("customerId").value
+            customerId: document.getElementById("customerId").value || null
         };
-
         if (!payload.date || !payload.timeStart || !payload.numPeople) {
-            return alert("Vui lòng nhập đầy đủ ngày, giờ và số khách");
+            return showToast("Vui lòng nhập đầy đủ thông tin", "error");
         }
-
         const res = await fetch("/api/booking/available-tables", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload)
         });
-
         const tables = await res.json();
         renderTables(tables);
         document.getElementById("secTable").classList.remove("disabled");
+        showToast(`Tìm thấy ${tables.length} bàn trống`, "success");
     }
 
     function renderTables(tables) {
-        const container = document.getElementById("tables");
-        container.innerHTML = "";
-
+        const c = document.getElementById("tables"); c.innerHTML = "";
         tables.forEach(t => {
-            const div = document.createElement("div");
-            div.className = "table-item";
-            div.innerHTML = `<strong>${t.tableName}</strong><br>Ghế: ${t.seats}`;
-            div.onclick = () => selectTable(div, t.id);
-            container.appendChild(div);
+            const d = document.createElement("div");
+            d.className = "table-item";
+            d.innerHTML = `<strong>${t.tableName}</strong><div class="seats">Ghế: ${t.seats}</div>`;
+            d.onclick = () => {
+                document.querySelectorAll(".table-item").forEach(x => x.classList.remove("selected"));
+                d.classList.add("selected");
+                selectedTableId = t.id;
+                document.getElementById("btnConfirm").disabled = false;
+            };
+            c.appendChild(d);
         });
     }
 
-    function selectTable(el, id) {
-        document.querySelectorAll(".table-item").forEach(x => x.classList.remove("selected"));
-        el.classList.add("selected");
-        selectedTableId = id;
-    }
-
     async function confirmBooking() {
-        if (!selectedTableId) return alert("Vui lòng chọn một bàn!");
-
+        if (!selectedTableId) return showToast("Vui lòng chọn bàn", "error");
         const payload = {
-            customerId: document.getElementById("customerId").value,
+            customerId: document.getElementById("customerId").value || null,
             date: document.getElementById("date").value,
             timeStart: document.getElementById("timeStart").value,
             numPeople: document.getElementById("numPeople").value,
             selectedTableId: selectedTableId
         };
-
         const res = await fetch("/api/booking/confirm", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload)
         });
-
         const msg = await res.text();
         if (msg === "SUCCESS") {
-            alert("Đặt bàn thành công!");
-            location.href = "/booking";
+            showToast("Đặt bàn thành công!", "success");
+            setTimeout(() => location.href = "/booking", 1500);
         } else {
-            alert("Đặt bàn thất bại: " + msg);
+            showToast("Lỗi: " + msg, "error");
         }
     }
 </script>
-
 </body>
 </html>

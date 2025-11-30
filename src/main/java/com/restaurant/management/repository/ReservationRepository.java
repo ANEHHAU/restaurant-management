@@ -11,6 +11,19 @@ import java.util.List;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
-//    // Tìm bàn trống và trạng thái trống theo khung giờ khách tìm
+    List<Reservation> findByTableId(Long tableId);
+    @Query("""
+    SELECT 
+        r.reservationStart,
+        r.reservationEnd,
+        r.customer.fullName,
+        r.customer.phone,
+        r.status
+    FROM Reservation r
+    WHERE r.table.id = :tableId
+    ORDER BY r.reservationStart
+""")
+    List<Object[]> findScheduleByTableId(@Param("tableId") Long tableId);
+
 
 }

@@ -1,35 +1,108 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-
 <head th:replace="layout/header :: head"></head>
 
-<body>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f7fa;
+        margin: 0;
+        padding: 20px;
+    }
 
+    h1 {
+        text-align: center;
+        color: #1a4971;
+        margin-bottom: 30px;
+        font-size: 2.2rem;
+        font-weight: 600;
+    }
+
+    /* ĐỒNG NHẤT 100% với trang Quản lý bàn */
+    .table-container {
+        width: 95%;
+        max-width: 1200px;
+        margin: 0 auto;
+        overflow-x: auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        padding: 20px;                 /* Giống hệt trang bàn */
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0 auto;
+        font-size: 15px;
+    }
+
+    th {
+        background: #1976d2;
+        color: white;
+        padding: 14px 8px;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    td {
+        text-align: center;
+        vertical-align: middle;
+        padding: 12px 8px;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f8fbff;
+    }
+
+    tr:hover {
+        background-color: #edf4ff;
+    }
+
+    /* Khi không có dữ liệu – cũng giống hệt trang bàn */
+    .empty-message {
+        text-align: center;
+        padding: 80px 20px;
+        color: #888;
+        font-size: 1.2rem;
+        background: #f9f9f9;
+    }
+</style>
+
+<body>
 <div th:replace="layout/header :: menu"></div>
 
 <h1>Quản lý khách hàng</h1>
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Họ tên</th>
-        <th>Địa chỉ</th>
-        <th>Số điện thoại</th>
-        <th>Ngày tạo</th>
-    </tr>
 
-    <tr th:if="${#lists.isEmpty(customers)}">
-        <td colspan="5" style="text-align: center;">Chưa có khách hàng nào</td>
-    </tr>
+<!-- Bọc giống hệt trang Quản lý bàn -->
+<div class="table-container">
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Họ tên</th>
+            <th>Số điện thoại</th>
+            <th>Địa chỉ</th>
+            <th>Ngày tạo</th>
+        </tr>
 
-    <tr th:each="c : ${customers}">
-        <td th:text="${c.id}"></td>
-        <td th:text="${c.fullName}"></td>
-        <td th:text="${c.address}"></td>
-        <td th:text="${c.phone}"></td>
-        <td th:text="${#temporals.format(c.createdAt,'dd/MM/yyyy HH:mm')}"></td>
-    </tr>
-</table>
+        <!-- Không có dữ liệu -->
+        <tr th:if="${#lists.isEmpty(customers)}">
+            <td colspan="5" class="empty-message">
+                Chưa có khách hàng nào<br>
+                Danh sách sẽ được cập nhật khi có khách đăng ký
+            </td>
+        </tr>
 
+        <!-- Có dữ liệu -->
+        <tr th:each="c : ${customers}">
+            <td th:text="${c.id}"></td>
+            <td th:text="${c.fullName}"></td>
+            <td th:text="${c.phone != null ? c.phone : '—'}"></td>
+            <td th:text="${c.address != null ? c.address : '—'}"></td>
+            <td th:text="${#temporals.format(c.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+        </tr>
+    </table>
+</div>
 
 </body>
 </html>

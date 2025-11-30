@@ -1,62 +1,145 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-
 <head th:replace="layout/header :: head"></head>
 
-<body>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f7fa;   /* Nền xám nhạt toàn trang */
+        margin: 0;
+        padding: 20px;
+        color: #333;
+    }
 
+    h1 {
+        text-align: center;
+        color: #1a4971;
+        margin-bottom: 30px;
+        font-size: 2.3rem;
+        font-weight: 600;
+    }
+
+    /* ĐÃ SỬA DẤU NGOẶC THỪA – BÂY GIỜ ĐẸP NHƯ CÁC TRANG KHÁC */
+    .table-container {
+        width: 95%;
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        padding: 20px;
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 15px;
+    }
+
+    th {
+        background: #1976d2;
+        color: white;
+        padding: 16px 10px;
+        text-align: center;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    td {
+        text-align: center;
+        padding: 14px 10px;
+        vertical-align: middle;
+    }
+
+    tr:nth-child(even) { background-color: #f8fbff; }
+    tr:hover           { background-color: #edf4ff; }
+
+    /* Badge trạng thái đặt bàn */
+    .badge {
+        padding: 7px 16px;
+        border-radius: 10px;
+        font-weight: bold;
+        font-size: 0.92em;
+        min-width: 90px;
+        display: inline-block;
+    }
+    .badge-PENDING   { background:#fff3cd; color:#856404; }
+    .badge-CONFIRMED { background:#d4edda; color:#155724; }
+    .badge-CANCELLED { background:#f8d7da; color:#721c24; }
+    .badge-COMPLETED { background:#d1ecf1; color:#0c5460; }
+    .badge-NO_SHOW   { background:#e2e3e5; color:#6c757d; }
+
+    .empty-message {
+        text-align: center;
+        padding: 90px 20px;
+        color: #888;
+        font-size: 1.25rem;
+        background: #f9f9f9;
+    }
+</style>
+
+<body>
 <div th:replace="layout/header :: menu"></div>
 
-<h1>Danh sách Đặt bàn (Reservations)</h1>
+<h1>Danh sách Đặt bàn</h1>
 
-<table border="1" cellspacing="0" cellpadding="8">
-    <tr>
-        <th>ID</th>
-        <th>Tên khách hàng</th>
-        <th>Số điện thoại</th>
-        <th>Bàn số</th>
-        <th>Thời gian bắt đầu</th>
-        <th>Thời gian kết thúc</th>
-        <th>Số người</th>
-        <th>Trạng thái</th>
-        <th>Ghi chú</th>
-        <th>Ngày tạo</th>
-    </tr>
+<div class="table-container">
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Tên khách hàng</th>
+            <th>Số điện thoại</th>
+            <th>Bàn</th>
+            <th>Bắt đầu</th>
+            <th>Kết thúc</th>
+            <th>Số người</th>
+            <th>Trạng thái</th>
+            <th>Ghi chú</th>
+            <th>Ngày tạo</th>
+            <th>Check In</th>
+<!--&lt;!&ndash;          @todo  nút này chuyển trạng thái từ xác nhận sang đã đến (chưa có trong dtb)-->
+<!--      @todo     checkin    nhấn hiện ra form thông tin khách để check và nút xác nhận sẽ đổi -->
+<!--     @todo      check out   nhấn hiện ra hóa đơn bàn của khách để thanh toán in hóa đơn và hoàn  thnahf đơn hàng -->
+        </tr>
+        </thead>
 
-    <!-- Trường hợp không có reservation -->
-    <tr th:if="${#lists.isEmpty(reservations)}">
-        <td colspan="10" style="text-align:center;">Chưa có đặt bàn nào</td>
-    </tr>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(reservations)}">
+            <td colspan="10" class="empty-message">
+                Chưa có lịch đặt bàn nào<br>
+                Khách hàng sẽ được thêm vào danh sách khi đặt bàn thành công
+            </td>
+        </tr>
 
-    <!-- Duyệt danh sách reservation -->
-    <tr th:each="r : ${reservations}">
-        <td th:text="${r.id}"></td>
+        <tr th:each="r : ${reservations}">
+            <td th:text="${r.id}"></td>
+            <td th:text="${r.customer?.fullName} ?: '—'"></td>
+            <td th:text="${r.customer?.phone} ?: '—'"></td>
+            <td th:text="${r.table?.tableName} ?: '—'"></td>
+            <td th:text="${#temporals.format(r.reservationStart, 'dd/MM/yyyy HH:mm')}"></td>
+            <td th:text="${#temporals.format(r.reservationEnd, 'dd/MM/yyyy HH:mm')}"></td>
+            <td th:text="${r.numPeople}"></td>
 
-        <!-- Tên khách hàng -->
-        <td th:text="${r.customer.fullName}"></td>
+            <!-- Trạng thái đẹp + tiếng Việt -->
+            <td>
+                <th:block th:switch="${r.status.name()}">
+                    <span th:case="'PENDING'"   class="badge badge-PENDING">Chờ xác nhận</span>
+                    <span th:case="'CONFIRMED'" class="badge badge-CONFIRMED">Đã xác nhận</span>
+                    <span th:case="'CANCELLED'" class="badge badge-CANCELLED">Đã hủy</span>
+                    <span th:case="'COMPLETED'" class="badge badge-COMPLETED">Hoàn thành</span>
+                    <!--        <span th:case="'NO_SHOW'"   class="badge badge-NO_SHOW">Không đến</span>-->
+                    <span th:case="*"           class="badge">[[${r.status}]]</span>
+                </th:block>
+            </td>
 
-        <!-- Số điện thoại khách -->
-        <td th:text="${r.customer.phone}"></td>
-
-        <!-- Bàn -->
-        <td th:text="${r.table.tableName}"></td>
-
-        <!-- Thời gian bắt đầu -->
-        <td th:text="${#temporals.format(r.reservationStart,'dd/MM/yyyy HH:mm')}"></td>
-
-        <!-- Thời gian kết thúc -->
-        <td th:text="${#temporals.format(r.reservationEnd,'dd/MM/yyyy HH:mm')}"></td>
-
-        <td th:text="${r.numPeople}"></td>
-
-        <td th:text="${r.status}"></td>
-
-        <td th:text="${r.note}"></td>
-
-        <td th:text="${#temporals.format(r.createdAt,'dd/MM/yyyy HH:mm')}"></td>
-    </tr>
-
-</table>
+            <td th:text="${r.note ?: '—'}"></td>
+            <td th:text="${#temporals.format(r.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
 
 </body>
 </html>
