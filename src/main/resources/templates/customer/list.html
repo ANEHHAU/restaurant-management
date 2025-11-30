@@ -1,8 +1,50 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="layout/header :: head"></head>
+<head th:replace="~{layout/header :: head}"></head>
+
 
 <style>
+    .detail-header {
+        margin-bottom: 15px;
+        padding: 12px;
+        background: #eef5ff;
+        border-radius: 10px;
+        font-size: 15px;
+        border-left: 4px solid #1976d2;
+    }
+
+    .detail-table-wrapper {
+        max-height: 300px;  /* khi quá nhiều sẽ trượt */
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+    }
+
+    .detail-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .detail-table th {
+        background: #1976d2;
+        color: white;
+        padding: 10px;
+        font-weight: 600;
+    }
+
+    .detail-table td {
+        padding: 10px;
+        text-align: center;
+    }
+
+    .detail-table tr:nth-child(even) {
+        background: #f8fbff;
+    }
+
+    .detail-table tr:hover {
+        background: #edf4ff;
+    }
+
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background: #f5f7fa;
@@ -67,10 +109,102 @@
         font-size: 1.2rem;
         background: #f9f9f9;
     }
+
+
+    /*cho đống nút*/
+
+    .btn-edit, .btn-delete, .btn-detail {
+        padding: 6px 14px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        margin: 2px;
+        color: white;
+    }
+
+    .btn-edit { background: #1976d2; }
+    .btn-delete { background: #e53935; }
+    .btn-detail { background: #43a047; }
+
+    .btn-edit:hover { background: #0d47a1; }
+    .btn-delete:hover { background: #b71c1c; }
+    .btn-detail:hover { background: #1b5e20; }
+
+    /* Popup overlay */
+    .popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.45);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    /* Popup box */
+    .popup-box {
+        background: white;
+        width: 450px;
+        padding: 25px;
+        border-radius: 16px;
+        box-shadow: 0 0 30px rgba(0,0,0,0.3);
+        animation: fadeIn 0.25s ease-out;
+    }
+
+    .popup-header {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1976d2;
+        margin-bottom: 15px;
+    }
+
+    .popup-close {
+        float: right;
+        cursor: pointer;
+        color: #888;
+        font-size: 20px;
+    }
+
+    .popup-close:hover {
+        color: #444;
+    }
+
+    @keyframes fadeIn {
+        from { transform: scale(0.9); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    .popup-input {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 12px;
+        border-radius: 10px;
+        border: 2px solid #ddd;
+    }
+
+    .popup-btn-save {
+        width: 100%;
+        padding: 12px;
+        background: #1976d2;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .popup-btn-save:hover {
+        background: #0d47a1;
+    }
 </style>
 
 <body>
-<div th:replace="layout/header :: menu"></div>
+<div th:replace="~{layout/header :: menu}"></div>
+
 
 <h1>Quản lý khách hàng</h1>
 
@@ -78,31 +212,188 @@
 <div class="table-container">
     <table>
         <tr>
-            <th>ID</th>
+            <th>STT</th>
             <th>Họ tên</th>
             <th>Số điện thoại</th>
             <th>Địa chỉ</th>
             <th>Ngày tạo</th>
+            <th>Hành động</th>
         </tr>
 
         <!-- Không có dữ liệu -->
         <tr th:if="${#lists.isEmpty(customers)}">
-            <td colspan="5" class="empty-message">
+            <td colspan="6" class="empty-message">
                 Chưa có khách hàng nào<br>
                 Danh sách sẽ được cập nhật khi có khách đăng ký
             </td>
         </tr>
 
         <!-- Có dữ liệu -->
-        <tr th:each="c : ${customers}">
-            <td th:text="${c.id}"></td>
+        <tr th:each="c, iter : ${customers}">
+            <td th:text="${iter.index + 1}"></td>
             <td th:text="${c.fullName}"></td>
             <td th:text="${c.phone != null ? c.phone : '—'}"></td>
             <td th:text="${c.address != null ? c.address : '—'}"></td>
             <td th:text="${#temporals.format(c.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+
+            <td>
+                <button class="btn-edit"
+                        th:onclick="'openEdit(' + ${c.id} + ')'">
+                    Sửa
+                </button>
+                <button class="btn-delete"
+                        th:onclick="'openDelete(' + ${c.id} + ')'">
+                    Xóa
+                </button>
+                <button class="btn-detail"
+                        th:onclick="'openDetail(' + ${c.id} + ')'">
+                    Chi tiết
+                </button>
+            </td>
         </tr>
+
     </table>
+
 </div>
+
+
+<div id="popup" class="popup-overlay">
+    <div class="popup-box">
+        <div class="popup-header">
+            <span id="popupTitle"></span>
+            <span class="popup-close" onclick="closePopup()">×</span>
+        </div>
+
+        <div id="popupContent"></div>
+    </div>
+</div>
+<script th:inline="javascript">
+
+
+
+    function openEdit(id) {
+        fetch(`/api/customers/${id}`)
+            .then(res => res.json())
+            .then(c => {
+                showPopup(
+                    "Chỉnh sửa khách hàng",
+                    `
+                    <input type="hidden" id="cusId" value="${c.id}">
+
+                    <label>Họ tên</label>
+                    <input class="popup-input" id="fullName" value="${c.fullName}">
+
+                    <label>Số điện thoại</label>
+                    <input class="popup-input" id="phone" value="${c.phone ?? ''}">
+
+                    <label>Địa chỉ</label>
+                    <textarea class="popup-input" id="address">${c.address ?? ''}</textarea>
+
+                    <button class="popup-btn-save" onclick="saveEdit()">Lưu thay đổi</button>
+                `
+                );
+            });
+    }
+
+    function saveEdit() {
+        let body = {
+            id: document.getElementById("cusId").value,
+            fullName: document.getElementById("fullName").value,
+            phone: document.getElementById("phone").value,
+            address: document.getElementById("address").value
+        };
+
+        fetch("/api/customers/update", {
+            method: "PUT",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(body)
+        }).then(res => {
+            if (res.ok) location.reload();
+        });
+    }
+
+    function openDelete(id) {
+        fetch(`/api/customers/${id}`)
+            .then(res => res.json())
+            .then(c => {
+                showPopup(
+                    "Xóa khách hàng",
+                    `
+                        <p>Bạn có chắc muốn xóa khách hàng này?</p>
+
+                        <div style="padding:10px; background:#f4f4f4; border-radius:8px; margin-bottom:15px;">
+                            <b>ID:</b> ${c.id}<br>
+                            <b>Họ tên:</b> ${c.fullName}<br>
+                            <b>Số điện thoại:</b> ${c.phone ?? '—'}<br>
+                            <b>Địa chỉ:</b> ${c.address ?? '—'}
+                        </div>
+
+                        <button class="popup-btn-save" style="background:#e53935"
+                                onclick="confirmDelete(${c.id})">
+                            Xóa ngay
+                        </button>
+                    `
+                );
+            });
+    }
+
+    function confirmDelete(id) {
+        fetch(`/api/customers/delete/${id}`, {
+            method: "DELETE"
+        }).then(() => location.reload());
+    }
+
+    function openDetail(id) {
+        fetch(`/api/customers/${id}/orders`)
+            .then(res => res.json())
+            .then(data => {
+
+                let rows = data.orders.map(o => `
+                <tr>
+                    <td>${o.id}</td>
+                    <td>${o.tableName}</td>
+                    <td>${new Date(o.time).toLocaleString('vi-VN')}</td>
+                    <td>${o.total.toLocaleString('vi-VN')} VNĐ</td>
+                </tr>
+            `).join("");
+
+                let table = `
+                <div class="detail-header">
+                    <div><b>Món yêu thích:</b> ${data.favoriteDish} (${data.favoriteCount} lần)</div>
+                    <div><b>Tổng số tiền đã tiêu:</b> ${data.totalSpent.toLocaleString('vi-VN')} VNĐ</div>
+                </div>
+
+                <div class="detail-table-wrapper">
+                    <table class="detail-table">
+                        <tr>
+                            <th>Mã HĐ</th>
+                            <th>Bàn</th>
+                            <th>Thời gian</th>
+                            <th>Tổng tiền</th>
+                        </tr>
+                        ${rows}
+                    </table>
+                </div>
+            `;
+
+                showPopup(`Chi tiết của ${data.customerName}`, table);
+            });
+    }
+
+
+
+    function showPopup(title, content) {
+        document.getElementById("popupTitle").innerHTML = title;
+        document.getElementById("popupContent").innerHTML = content;
+        document.getElementById("popup").style.display = "flex";
+    }
+
+    function closePopup() {
+        document.getElementById("popup").style.display = "none";
+    }
+
+</script>
+
 
 </body>
 </html>

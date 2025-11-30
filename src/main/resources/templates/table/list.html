@@ -1,206 +1,43 @@
-<!--<!DOCTYPE html>-->
-<!--<html xmlns:th="http://www.thymeleaf.org">-->
-<!--<head th:replace="layout/header :: head"></head>-->
 
-<!--<style>-->
-
-<!--    .btn-view-schedule {-->
-<!--        background: #e3f2fd;              /* xanh dương nhạt rất đẹp */-->
-<!--        color: #1976d2;                   /* chữ xanh đậm */-->
-<!--        border: none;-->
-<!--        padding: 8px 16px;-->
-<!--        font-size: 14px;-->
-<!--        font-weight: 600;-->
-<!--        border-radius: 8px;               /* bo góc tròn */-->
-<!--        cursor: pointer;-->
-<!--        transition: all 0.25s ease;-->
-<!--        box-shadow: 0 2px 4px rgba(25, 118, 210, 0.15);-->
-<!--    }-->
-
-<!--    .btn-view-schedule:hover {-->
-<!--        background: #bbdefb;-->
-<!--        transform: translateY(-1px);-->
-<!--        box-shadow: 0 4px 8px rgba(25, 118, 210, 0.25);-->
-<!--    }-->
-
-<!--    .btn-view-schedule:active {-->
-<!--        transform: translateY(0);-->
-<!--        box-shadow: 0 1px 2px rgba(25, 118, 210, 0.2);-->
-<!--    }-->
-
-
-
-<!--    /* STATUS TABLE */-->
-<!--    .status-active { background:#d4f8d4; color:#0f730c; padding:5px 10px; border-radius:6px; font-weight:bold; }-->
-<!--    .status-inactive { background:#fff4c2; color:#8a6d00; padding:5px 10px; border-radius:6px; font-weight:bold; }-->
-
-<!--    /* SCHEDULE STATUS BADGE */-->
-<!--    .st-pending { background:#ffe7a3; color:#8a6700; padding:4px 8px; border-radius:5px; font-weight:bold; }-->
-<!--    .st-confirmed { background:#c8ffd4; color:#0a6c20; padding:4px 8px; border-radius:5px; font-weight:bold; }-->
-<!--    .st-cancelled { background:#ffd1d1; color:#a30000; padding:4px 8px; border-radius:5px; font-weight:bold; }-->
-<!--    .st-completed { background:#d7e6ff; color:#003c91; padding:4px 8px; border-radius:5px; font-weight:bold; }-->
-
-<!--    .overlay {-->
-<!--        display:none; position:fixed; inset:0;-->
-<!--        background:rgba(0,0,0,0.4);-->
-<!--        z-index:999; justify-content:center; align-items:center;-->
-<!--    }-->
-
-<!--    .popup {-->
-<!--        background:white; width:750px; max-height:80vh;-->
-<!--        padding:20px; border-radius:12px;-->
-<!--        overflow-y:auto; position:relative;-->
-<!--        box-shadow:0 4px 15px rgba(0,0,0,0.3);-->
-<!--    }-->
-
-<!--    .btn-close {-->
-<!--        position:absolute;-->
-<!--        top:10px; right:10px;-->
-<!--        background:red; color:white;-->
-<!--        padding:6px 12px; border:none;-->
-<!--        border-radius:6px; cursor:pointer;-->
-<!--    }-->
-
-<!--    .past { background:#e0e0e0; }-->
-<!--    .upcoming { background:#d8e9ff; }-->
-
-<!--    th, td { border:1px solid #ccc; padding:8px; }-->
-<!--</style>-->
-
-
-<!--<body>-->
-<!--<div th:replace="layout/header :: menu"></div>-->
-
-<!--<h1>Quản lý bàn</h1>-->
-
-<!--<table>-->
-<!--    <tr>-->
-<!--        <th>ID</th>-->
-<!--        <th>Tên bàn</th>-->
-<!--        <th>Số ghế</th>-->
-<!--        <th>Trạng thái</th>-->
-<!--        <th>Tổng doanh thu</th>-->
-<!--        <th>Lịch đặt bàn</th>-->
-<!--    </tr>-->
-
-<!--    <tr th:each="t : ${tables}">-->
-<!--        <td th:text="${t[0]}"></td>-->
-<!--        <td th:text="${t[1]}"></td>-->
-<!--        <td th:text="${t[2]}"></td>-->
-
-<!--        <td>-->
-<!--            <span th:class="${#strings.equalsIgnoreCase(t[3],'ACTIVE') ? 'status-active':'status-inactive'}"-->
-<!--                  th:text="${#strings.equalsIgnoreCase(t[3],'ACTIVE') ? 'Đang hoạt động':'Chưa hoạt động'}">-->
-<!--            </span>-->
-<!--        </td>-->
-
-<!--        <td th:text="${#numbers.formatDecimal(t[4],0,'COMMA',0,'POINT')} + ' ₫'"></td>-->
-
-
-<!--        <td>-->
-<!--            <button class="btn-view-schedule"-->
-<!--                    th:data-table-id="${t[0]}"-->
-<!--                    th:data-table-name="${t[1]}"-->
-<!--                    onclick="handleShowSchedule(this)">-->
-<!--                Chi tiết-->
-<!--            </button>-->
-<!--        </td>-->
-
-<!--    </tr>-->
-<!--</table>-->
-
-
-<!--&lt;!&ndash; POPUP &ndash;&gt;-->
-<!--<div id="overlay" class="overlay">-->
-<!--    <div class="popup" id="popup-content"></div>-->
-<!--</div>-->
-
-<!--<script>-->
-<!--    function handleShowSchedule(button) {-->
-<!--        const tableId = button.getAttribute('data-table-id');-->
-<!--        const tableName = button.getAttribute('data-table-name');-->
-<!--        showSchedule(tableId, tableName);-->
-<!--    }-->
-
-
-<!--    function closePopup() {-->
-<!--        document.getElementById("overlay").style.display = "none";-->
-<!--    }-->
-
-<!--    function showPopup(html) {-->
-<!--        document.getElementById("popup-content").innerHTML =-->
-<!--            '<button class="btn-close" onclick="closePopup()">Đóng</button>' + html;-->
-
-<!--        document.getElementById("overlay").style.display = "flex";-->
-<!--    }-->
-
-<!--    /* 🔵 SHOW SCHEDULE POPUP */-->
-<!--    async function showSchedule(tableId, tableName) {-->
-<!--        let res = await fetch(`/tables/${tableId}/schedule`);-->
-<!--        let data = await res.json();-->
-<!--        let now = new Date();-->
-
-<!--        if (data.length === 0) {-->
-<!--            showPopup(`<h3>Lịch đặt bàn – ${tableName}</h3><p>Không có lịch.</p>`);-->
-<!--            return;-->
-<!--        }-->
-
-<!--        let rows = data.map(r => {-->
-<!--            let start = new Date(r.start);-->
-<!--            let css = start < now ? "past" : "upcoming";-->
-
-<!--            let statusHtml =-->
-<!--                r.status === "PENDING"   ? "<span class='st-pending'>Chờ xác nhận</span>" :-->
-<!--                    r.status === "CONFIRMED" ? "<span class='st-confirmed'>Đã xác nhận</span>" :-->
-<!--                        r.status === "CANCELLED" ? "<span class='st-cancelled'>Đã hủy</span>" :-->
-<!--                            "<span class='st-completed'>Thành công</span>";-->
-
-<!--            return `-->
-<!--                <tr class="${css}">-->
-<!--                    <td>${r.customer} (${r.phone})</td>-->
-<!--                    <td>${formatDate(r.start)}</td>-->
-<!--                    <td>${formatDate(r.end)}</td>-->
-<!--                    <td>${statusHtml}</td>-->
-<!--                </tr>-->
-<!--            `;-->
-<!--        }).join("");-->
-
-<!--        let html = `-->
-<!--            <h3>Lịch đặt bàn – ${tableName}</h3>-->
-<!--            <table>-->
-<!--                <tr>-->
-<!--                    <th>Khách hàng</th>-->
-<!--                    <th>Bắt đầu</th>-->
-<!--                    <th>Kết thúc</th>-->
-<!--                    <th>Trạng thái</th>-->
-<!--                </tr>-->
-<!--                ${rows}-->
-<!--            </table>-->
-<!--        `;-->
-
-<!--        showPopup(html);-->
-<!--    }-->
-
-<!--    function formatDate(str) {-->
-<!--        let d = new Date(str);-->
-<!--        let dd = String(d.getDate()).padStart(2, '0');-->
-<!--        let mm = String(d.getMonth()+1).padStart(2, '0');-->
-<!--        let yyyy = d.getFullYear();-->
-
-<!--        let hh = String(d.getHours()).padStart(2, '0');-->
-<!--        let mi = String(d.getMinutes()).padStart(2, '0');-->
-
-<!--        return `${hh}:${mi} ${dd}/${mm}/${yyyy}`;-->
-<!--    }-->
-<!--</script>-->
-
-<!--</body>-->
-<!--</html>-->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="layout/header :: head"></head>
 
 <style>
+
+
+    .btn-edit, .btn-delete, .btn-detail {
+        padding: 6px 14px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        margin: 2px;
+        color: white;
+    }
+
+    .btn-edit { background: #1976d2; }
+    .btn-delete { background: #e53935; }
+    .btn-detail { background: #43a047; }
+
+    .btn-edit:hover { background: #0d47a1; }
+    .btn-delete:hover { background: #b71c1c; }
+    .btn-detail:hover { background: #1b5e20; }
+
+    .btn-view {
+        padding: 5px 10px;
+        margin-top: 6px;
+        background: #BFA3FF;
+        color: white;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+    }
+    .btn-view:hover {
+        background: #9B6BFF;
+    }
+
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background: #f5f7fa;
@@ -330,19 +167,17 @@
 <div class="table-container">
     <table>
         <tr>
-            <th>ID</th>
+            <th>STT</th>
             <th>Tên bàn</th>
             <th>Số ghế</th>
-            <th>Trạng thái</th>
+            <th>Trạng thái hiện tại</th>
             <th>Tổng doanh thu</th>
             <th>Lịch đặt bàn</th>
-
-<!--       @todo     quản lý order-->
-<!--            món để quản lý món của bàn in hóa đơn in đơn bếp làm-->
+            <th>Hành động</th>
         </tr>
 
-        <tr th:each="t : ${tables}">
-            <td th:text="${t[0]}"></td>
+        <tr th:each="t, iter : ${tables}">
+            <td th:text="${iter.index + 1}"></td>
             <td th:text="${t[1]}"></td>
             <td th:text="${t[2]}"></td>
 
@@ -350,6 +185,11 @@
                 <span th:class="${#strings.equalsIgnoreCase(t[3],'ACTIVE') ? 'status-active' : 'status-inactive'}"
                       th:text="${#strings.equalsIgnoreCase(t[3],'ACTIVE') ? 'Đang hoạt động' : 'Chưa hoạt động'}">
                 </span>
+                <button class="btn-view"
+                        th:if="${#strings.equalsIgnoreCase(t[3],'ACTIVE')}"
+                        th:onclick="'openViewDish(' + ${t[0]} + ')'">
+                    Xem món
+                </button>
             </td>
 
             <td th:text="${#numbers.formatDecimal(t[4], 0, 'COMMA', 0, 'POINT')} + ' ₫'"></td>
@@ -362,6 +202,9 @@
                     Chi tiết
                 </button>
             </td>
+
+
+
         </tr>
     </table>
 </div>

@@ -1,5 +1,6 @@
 package com.restaurant.management.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -32,11 +33,14 @@ public class Customer {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "customer")
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.REMOVE)
+    @JsonIgnore
     private List<Reservation> reservations;
 
-    @OneToMany(mappedBy = "customer")
+
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Order> orders;
+
 
     @PrePersist
     public void prePersist() {

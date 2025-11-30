@@ -1,5 +1,6 @@
 package com.restaurant.management.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -21,16 +22,19 @@ public class Order {
     // Nhiều order thuộc 1 khách
     @ManyToOne
     @JoinColumn(name = "customer_id")
+    @JsonIgnore
     private Customer customer;
 
     // Nhiều order thuộc 1 bàn
     @ManyToOne
     @JoinColumn(name = "table_id")
+    @JsonIgnore
     private RestaurantTable table;
 
     // Nhiều order có thể gắn với 1 reservation
     @ManyToOne
     @JoinColumn(name = "reservation_id")
+    @JsonIgnore
     private Reservation reservation;
 
     @Column(name = "order_time", nullable = false)
@@ -51,7 +55,8 @@ public class Order {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "order",  orphanRemoval = true,cascade = CascadeType.REMOVE)
+    @JsonIgnore
     private List<OrderDetail> orderDetails;
 
     @PrePersist

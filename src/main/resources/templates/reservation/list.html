@@ -88,7 +88,7 @@
     <table>
         <thead>
         <tr>
-            <th>ID</th>
+            <th>STT</th>
             <th>Tên khách hàng</th>
             <th>Số điện thoại</th>
             <th>Bàn</th>
@@ -112,9 +112,8 @@
                 Khách hàng sẽ được thêm vào danh sách khi đặt bàn thành công
             </td>
         </tr>
-
-        <tr th:each="r : ${reservations}">
-            <td th:text="${r.id}"></td>
+        <tr th:each="r, iter : ${reservations}">
+            <td th:text="${iter.index + 1}"></td>
             <td th:text="${r.customer?.fullName} ?: '—'"></td>
             <td th:text="${r.customer?.phone} ?: '—'"></td>
             <td th:text="${r.table?.tableName} ?: '—'"></td>
