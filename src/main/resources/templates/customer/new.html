@@ -1,10 +1,269 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout/header :: head"></head>
+
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f7fa;
+        margin: 0;
+        padding: 20px;
+        color: #333;
+    }
+
+    h1 {
+        text-align: center;
+        color: #1a4971;
+        margin-bottom: 10px;
+        font-size: 2.2rem;
+        font-weight: 600;
+    }
+
+    .page-desc {
+        text-align: center;
+        color: #666;
+        margin-bottom: 40px;
+        font-size: 1.1rem;
+    }
+
+    .form-container {
+        width: 95%;
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        padding: 40px 35px;
+    }
+
+    .form-title {
+        text-align: center;
+        color: #1976d2;
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .form-subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 30px;
+    }
+
+    label {
+        display: block;
+        font-weight: 600;
+        color: #1a4971;
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+
+    input[type="text"],
+    textarea {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+        outline: none;
+        border-color: #1976d2;
+        box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.15);
+    }
+
+    textarea { resize: vertical; min-height: 100px; }
+
+    .btn-save {
+        background: #1976d2;
+        color: white;
+        padding: 14px 32px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 25px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
+    }
+
+    .btn-save:hover {
+        background: #1565c0;
+        transform: translateY(-2px);
+    }
+
+    .btn-back {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: #1976d2;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 15px;
+    }
+
+    .btn-back:hover { color: #0d47a1; text-decoration: underline; }
+
+    /* TOAST NOTIFICATION - ĐẸP LUNG LINH */
+    .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        min-width: 300px;
+        padding: 16px 20px;
+        border-radius: 12px;
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        transform: translateX(400px);
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .toast.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    .toast.success {
+        background: #4caf50;
+    }
+
+    .toast.error {
+        background: #f44336;
+    }
+
+    .toast i {
+        font-size: 24px;
+    }
+
+    .toast .close-toast {
+        margin-left: auto;
+        cursor: pointer;
+        font-size: 20px;
+        opacity: 0.8;
+    }
+</style>
+
 <body>
-$END$
+<div th:replace="layout/header :: menu"></div>
+
+<h1>Quản lý khách hàng</h1>
+<p class="page-desc">Thêm thông tin khách hàng mới vào hệ thống</p>
+
+<div class="form-container">
+    <h2 class="form-title">Thêm khách hàng mới</h2>
+    <p class="form-subtitle">Vui lòng nhập đầy đủ thông tin</p>
+
+    <form id="customerForm">
+        <div>
+            <label for="fullName">Họ và tên *</label>
+            <input type="text" id="fullName" placeholder="Ví dụ: Nguyễn Văn An" required>
+        </div>
+
+        <div>
+            <label for="phone">Số điện thoại *</label>
+            <input type="text" id="phone" placeholder="Ví dụ: 0901234567" maxlength="10" required>
+        </div>
+
+        <div>
+            <label for="address">Địa chỉ</label>
+            <textarea id="address" placeholder="Ví dụ: 123 Đường Lê Lợi, Quận 1, TP.HCM"></textarea>
+        </div>
+
+        <button type="button" class="btn-save" onclick="saveCustomer()">
+            Lưu khách hàng
+        </button>
+    </form>
+
+    <a href="/customers" class="btn-back">Quay lại danh sách khách hàng</a>
+</div>
+
+<!-- Toast container -->
+<div id="toastContainer"></div>
+
+<script>
+    // Hàm hiển thị toast đẹp
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+            <span>${type === 'success' ? 'Thành công' : 'Lỗi'}</span>
+            <span>${message}</span>
+            <span class="close-toast" onclick="this.parentElement.remove()">×</span>
+        `;
+
+        container.appendChild(toast);
+
+        // Trigger animation
+        setTimeout(() => toast.classList.add('show'), 100);
+
+        // Tự ẩn sau 4 giây
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 500);
+        }, 4000);
+    }
+
+    async function saveCustomer() {
+        let fullName = document.getElementById("fullName").value.trim();
+        let phone = document.getElementById("phone").value.trim();
+        let address = document.getElementById("address").value.trim();
+
+        if (!fullName) {
+            showToast("Vui lòng nhập họ tên khách hàng!", "error");
+            return;
+        }
+
+        if (!phone) {
+            showToast("Vui lòng nhập số điện thoại!", "error");
+            return;
+        }
+
+        if (!/^0\d{9}$/.test(phone)) {
+            showToast("Số điện thoại không hợp lệ!<br>Phải có 10 số và bắt đầu bằng 0", "error");
+            return;
+        }
+
+        const data = { fullName, phone, address };
+
+        try {
+            let res = await fetch("/customers/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                showToast("Thêm khách hàng thành công!", "success");
+                setTimeout(() => window.location.href = "/customers", 1200);
+            } else {
+                let msg = await res.text();
+                showToast(msg || "Không thể thêm khách hàng", "error");
+            }
+        } catch (err) {
+            showToast("Lỗi kết nối mạng. Vui lòng thử lại!", "error");
+        }
+    }
+
+    // Nhấn Ctrl + Enter để lưu nhanh
+    document.addEventListener("keydown", function(e) {
+        if (e.ctrlKey && e.key === "Enter") {
+            saveCustomer();
+        }
+    });
+</script>
+
 </body>
 </html>

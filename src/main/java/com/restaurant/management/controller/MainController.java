@@ -1,6 +1,7 @@
 package com.restaurant.management.controller;
 
-import com.restaurant.management.repository.RestaurantTableRepository;
+import com.restaurant.management.repository.ReservationRepository;
+import com.restaurant.management.repository.TableRepository;
 import com.restaurant.management.repository.CustomerRepository;
 import com.restaurant.management.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -8,13 +9,18 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.util.List;
+
 @Controller
 @RequiredArgsConstructor
 public class MainController {
 
-    private final RestaurantTableRepository tableRepository;
+//    @todo thêm trạng thái của revelu để chuyển sang đã checkin ( có thể sau mở rộng order mang về)
+
+    private final TableRepository tableRepository;
     private final CustomerRepository customerRepository;
     private final OrderRepository orderRepository;
+    private final ReservationRepository reservationRepository;
 
     // Trang chính: menu dẫn tới 3 màn
     @GetMapping("/")
@@ -28,8 +34,12 @@ public class MainController {
     // Quản lý bàn: hiện full danh sách bàn
     @GetMapping("/tables")
     public String listTables(Model model) {
-        model.addAttribute("tables", tableRepository.findAll());
-        return "table/list"; // templates/table/list.html
+
+        // Lấy danh sách bàn + tổng doanh thu
+        List<Object[]> tables = tableRepository.findAllTableWithRevenue();
+
+        model.addAttribute("tables", tables);
+        return "table/list";
     }
 
     // Quản lý khách hàng: hiện full danh sách KH
@@ -45,4 +55,12 @@ public class MainController {
         model.addAttribute("orders", orderRepository.findAll());
         return "order/list"; // templates/order/list.html
     }
+
+    // Quản lý đặt bàn: hiện full danh sách đặt bàn
+    @GetMapping("/reservations")
+    public String listReservations(Model model) {
+        model.addAttribute("reservations", reservationRepository.findAll());
+        return "reservation/list"; // templates/order/list.html
+    }
+
 }
