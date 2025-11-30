@@ -1,45 +1,82 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-
 <head th:replace="layout/header :: head"></head>
 
-<body>
+<style>
+    body {font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f7fa;margin:0;padding:20px;}
+    h1 {text-align:center;color:#1a4971;margin-bottom:30px;font-size:2.2rem;font-weight:600;}
 
+    .table-container {
+        width:95%; max-width:1200px; margin:0 auto; background:white;
+        border-radius:12px; box-shadow:0 8px 25px rgba(0,0,0,0.1); padding:20px; overflow-x:auto;
+    }
+    table {width:100%; border-collapse:collapse; font-size:15px;}
+    th {background:#1976d2; color:white; padding:14px 8px; text-align:center; font-weight:600;}
+    td {text-align:center; vertical-align:middle; padding:12px 8px;}
+    tr:nth-child(even){background-color:#f8fbff;}
+    tr:hover{background-color:#edf4ff;}
+
+    .status-badge {
+        display:inline-block; padding:6px 14px; border-radius:8px;
+        font-weight:bold; font-size:0.9em; min-width:80px; text-align:center;
+    }
+    .status-NEW         {background:#fff3cd; color:#856404;}
+    .status-IN_PROGRESS {background:#d1ecf1; color:#0c5460;}
+    .status-COMPLETED   {background:#d4edda; color:#155724;}
+    .status-CANCELLED   {background:#f8d7da; color:#721c24;}
+
+    .empty-message {text-align:center; padding:80px 20px; color:#888; font-size:1.2rem; background:#f9f9f9;}
+</style>
+
+<body>
 <div th:replace="layout/header :: menu"></div>
 
 <h1>Quản lý đơn hàng</h1>
 
-<table>
+<div class="table-container">
     <table>
         <tr>
             <th>ID</th>
             <th>Khách hàng</th>
             <th>Bàn</th>
-            <th>Thời gian</th>
+            <th>Thời gian đặt</th>
             <th>Trạng thái</th>
+            <th>Món ăn</th>
         </tr>
 
-        <!-- Nếu danh sách rỗng hoặc null -->
         <tr th:if="${#lists.isEmpty(orders)}">
-            <td colspan="5" style="text-align: center;">Chưa có đơn hàng nào</td>
+            <td colspan="5" class="empty-message">
+                Chưa có đơn hàng nào<br>Đơn hàng sẽ xuất hiện khi khách gọi món
+            </td>
         </tr>
 
-        <!-- Nếu có dữ liệu thì lặp -->
         <tr th:each="o : ${orders}">
             <td th:text="${o.id}"></td>
 
             <td>
                 <span th:if="${o.customer != null}" th:text="${o.customer.fullName}"></span>
-                <span th:if="${o.customer == null}">Khách vãng lai</span>
+                <span th:if="${o.customer == null}" style="color:#666;font-style:italic">Khách vãng lai</span>
             </td>
 
-            <td th:text="${o.table != null ? o.table.tableName : 'Không'}"></td>
-            <td th:text="${#temporals.format(o.orderTime,'dd/MM/yyyy HH:mm')}"></td>
-            <td th:text="${o.status}"></td>
+            <td>
+                <span th:if="${o.table != null}" th:text="${o.table.tableName}"></span>
+                <span th:if="${o.table == null}" style="color:#999">—</span>
+            </td>
+
+            <td th:text="${#temporals.format(o.orderTime, 'dd/MM/yyyy HH:mm')}"></td>
+
+            <td>
+                <th:block th:switch="${o.status.name()}">
+                    <span class="status-badge status-NEW" th:case="'NEW'">Mới tạo</span>
+                    <span class="status-badge status-IN_PROGRESS" th:case="'IN_PROGRESS'">Đang phục vụ</span>
+                    <span class="status-badge status-COMPLETED" th:case="'COMPLETED'">Hoàn thành</span>
+                    <span class="status-badge status-CANCELLED" th:case="'CANCELLED'">Đã hủy</span>
+                    <span class="status-badge" th:case="*">[[${o.status}]]</span>
+                </th:block>
+            </td>
+
         </tr>
     </table>
-
-</table>
-
+</div>
 </body>
 </html>
