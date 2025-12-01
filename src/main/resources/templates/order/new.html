@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/header :: head}"></head>
+
+<style>
+    body {font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; margin: 0; padding: 20px; color: #333;}
+    h1 {text-align: center; color: #1a4971; margin-bottom: 10px; font-size: 2.2rem; font-weight: 600;}
+    .page-desc {text-align: center; color: #666; margin-bottom: 40px; font-size: 1.1rem;}
+    .form-container {width: 95%; max-width: 900px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); padding: 40px;}
+    .form-title {text-align: center; color: #1976d2; font-size: 1.9rem; margin-bottom: 10px; font-weight: 600;}
+    .form-subtitle {text-align: center; color: #666; margin-bottom: 30px;}
+
+    label {display: block; font-weight: 600; color: #1a4971; margin-bottom: 8px; font-size: 15px;}
+    input, select {width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 15px; box-sizing: border-box; transition: all 0.3s; margin-bottom: 20px;}
+    input:focus, select:focus {outline: none; border-color: #1976d2; box-shadow: 0 0 0 4px rgba(25,118,210,0.15);}
+    input:disabled {background:#f8f9fa; opacity:0.6;}
+
+    .btn-save {background:#1976d2;color:white;padding:16px;border:none;border-radius:12px;font-size:17px;font-weight:600;cursor:pointer;width:100%;margin-top:30px;box-shadow:0 4px 15px rgba(25,118,210,0.3);}
+    .btn-save:hover {background:#1565c0;transform:translateY(-2px);}
+    .btn-back {display:block;text-align:center;margin-top:20px;color:#1976d2;font-weight:600;text-decoration:none;}
+    .btn-back:hover {text-decoration:underline;}
+
+    /* NÚT LOẠI KHÁCH ĐẸP */
+    .customer-type-buttons {display:flex;justify-content:center;gap:25px;margin:40px 0;}
+    .type-btn {padding:18px 50px;border:2px solid #1976d2;border-radius:14px;background:white;color:#1976d2;font-weight:600;font-size:17px;cursor:pointer;transition:all .3s;min-width:280px;text-align:center;box-shadow:0 4px 12px rgba(25,118,210,.1);}
+    .type-btn.active {background:#1976d2;color:white;transform:translateY(-4px);box-shadow:0 10px 25px rgba(25,118,210,.3);}
+    .type-btn:hover:not(.active) {background:#e3f2fd;}
+
+    .dish-row {display:flex;gap:12px;align-items:center;margin-bottom:12px;}
+    .dish-row select,.dish-row input {flex:1;margin:0;}
+    .remove-dish {color:#f44336;font-size:28px;cursor:pointer;font-weight:bold;}
+    .add-dish {color:#1976d2;font-weight:600;cursor:pointer;margin:15px 0 25px;display:inline-block;font-size:16px;}
+
+    .info-box {background:#e3f2fd;padding:20px;border-radius:12px;border-left:5px solid #1976d2;margin:20px 0;}
+    .info-box p {margin:8px 0;font-size:15px;}
+    .info-box strong {color:#1a4971;}
+
+    .toast{position:fixed;top:20px;right:20px;min-width:350px;padding:18px 22px;border-radius:12px;color:white;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.3);transform:translateX(420px);opacity:0;transition:all .5s cubic-bezier(.68,-.55,.265,1.55);z-index:10000;display:flex;align-items:center;gap:12px;}
+    .toast.show{transform:translateX(0);opacity:1;}
+    .toast.success{background:#4caf50;}
+    .toast.error{background:#f44336;}
+    .toast .close-toast{margin-left:auto;cursor:pointer;font-size:24px;}
+</style>
+
+<body>
+<div th:replace="~{layout/header :: menu}"></div>
+
+<h1>Quản lý đơn hàng</h1>
+<p class="page-desc">Tạo đơn hàng mới cho khách</p>
+
+<div class="form-container">
+    <h2 class="form-title">Tạo đơn hàng mới</h2>
+    <p class="form-subtitle">Chọn loại khách và gọi món</p>
+
+    <!-- NÚT CHỌN LOẠI KHÁCH -->
+    <div class="customer-type-buttons">
+        <div class="type-btn active" data-type="walkin">
+            <input type="radio" name="customerType" value="walkin" checked style="display:none;">
+            Khách vãng lai (đi ngang)
+        </div>
+        <div class="type-btn" data-type="reserved">
+            <input type="radio" name="customerType" value="reserved" style="display:none;">
+            Khách đã đặt trước
+        </div>
+    </div>
+
+    <!-- FORM KHÁCH VÃNG LAI -->
+    <div id="walkinForm">
+        <label>Tên khách</label>
+        <input type="text" id="walkinName" value="Khách vãng lai" placeholder="Nhập tên khách">
+
+        <label>Số điện thoại (tùy chọn)</label>
+        <input type="text" id="walkinPhone" placeholder="Nhập số điện thoại">
+
+        <label>Bàn *</label>
+        <select id="tableIdWalkin" required>
+            <option value="">-- Chọn bàn trống --</option>
+            <option th:each="table : ${tables}"
+                    th:value="${table.id}"
+                    th:text="'Bàn ' + ${table.tableName} + ' (' + ${table.seats} + ' ghế)'"></option>
+        </select>
+
+        <label>Số khách thực tế *</label>
+        <input type="number" id="guestCountWalkin" min="1" value="1" required>
+    </div>
+
+    <!-- FORM KHÁCH ĐẶT TRƯỚC -->
+    <div id="reservedForm" style="display:none;">
+        <label>Chọn đặt bàn *</label>
+
+        <select id="reservationId" onchange="loadReservationInfo()" required>
+            <option value="">-- Chọn đặt bàn đang chờ hoặc đã xác nhận --</option>
+            <option th:each="res : ${reservations}"
+                    th:value="${res.id}"
+                    th:text="${res.customer?.fullName ?: 'Khách lẻ'}
+                     + ' (' + ${res.customer?.phone ?: 'Không có SĐT'} + ') '
+                     + '- ' + ${#temporals.format(res.reservationStart, 'HH:mm dd/MM')}
+                     + ' - Bàn ' + ${res.table?.tableName ?: 'Chưa có bàn'}
+                     + ' (' + ${res.numPeople} + ' người)'">
+            </option>
+        </select>
+
+        <div id="reservationInfo" class="info-box" style="display:none;">
+            <p><strong>Tên khách:</strong> <span id="resCustomerName">-</span></p>
+            <p><strong>Số điện thoại:</strong> <span id="resPhone">-</span></p>
+            <p><strong>Bàn đã đặt:</strong> <span id="resTable">-</span></p>
+            <p><strong>Số khách:</strong> <span id="resPeople">-</span></p>
+            <p><strong>Thời gian:</strong> <span id="resTime">-</span></p>
+        </div>
+
+        <input type="hidden" id="finalTableId">
+        <input type="hidden" id="finalGuestCount">
+        <input type="hidden" id="finalCustomerName">
+    </div>
+
+    <label>Ghi chú cho bếp</label>
+    <input type="text" id="note" placeholder="Ví dụ: Ít đá, không hành, thêm ớt...">
+
+    <hr style="margin:35px 0;border:1px dashed #ddd;">
+
+    <h3 style="color:#1a4971;margin-bottom:20px;">Gọi món nhanh</h3>
+    <div id="dishContainer">
+        <div class="dish-row">
+            <select class="dish-select" required>
+                <option value="">-- Chọn món --</option>
+                <option th:each="dish : ${dishes}"
+                        th:value="${dish.id}"
+                        th:text="${dish.dishName} + ' - ' + ${#numbers.formatDecimal(dish.unitPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'"></option>
+            </select>
+            <input type="number" class="quantity" min="1" value="1" required>
+            <span class="remove-dish" onclick="this.parentElement.remove()">x</span>
+        </div>
+    </div>
+    <div class="add-dish" onclick="addDishRow()">+ Thêm món ăn</div>
+
+    <button type="button" class="btn-save" onclick="createOrder()">Tạo đơn hàng ngay</button>
+    <a href="/orders" class="btn-back">Quay lại danh sách đơn hàng</a>
+</div>
+
+<div id="toastContainer"></div>
+
+<!-- TEMPLATE CHO DÒNG MÓN ĂN MỚI (để clone bằng JS) -->
+<template id="dishTemplate">
+    <div class="dish-row">
+        <select class="dish-select" required>
+            <option value="">-- Chọn món --</option>
+            <option th:each="dish : ${dishes}"
+                    th:value="${dish.id}"
+                    th:text="${dish.dishName} + ' - ' + ${#numbers.formatDecimal(dish.unitPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'"></option>
+        </select>
+        <input type="number" class="quantity" min="1" value="1" required>
+        <span class="remove-dish" onclick="this.parentElement.remove()">x</span>
+    </div>
+</template>
+
+<script th:inline="javascript">
+    function formatDate(raw) {
+        if (!raw) return "";
+        const d = new Date(raw);
+        return d.toLocaleString("vi-VN", { hour: '2-digit', minute: '2-digit', day:'2-digit', month:'2-digit', year:'numeric' });
+    }
+
+
+    /*<![CDATA[*/
+
+    const reservationMap = {
+        /*[# th:each="r : ${reservations}"]*/
+        [[${r.id}]]: {
+            customerName: /*[[${r.customer != null ? r.customer.fullName : 'Khách lẻ'}]]*/,
+            phone: /*[[${r.customer != null ? r.customer.phone : ''}]]*/,
+            tableId: /*[[${r.table != null ? r.table.id : null}]]*/,
+            tableName: /*[[${r.table != null ? r.table.tableName : 'Chưa có'}]]*/,
+            numPeople: /*[[${r.numPeople}]]*/,
+            start: /*[[${#temporals.format(r.reservationStart, 'HH:mm dd/MM/yyyy')}]]*/
+        },
+        /*[/]*/
+    };
+
+
+    // Xử lý nút chọn loại khách
+    document.querySelectorAll('.type-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const type = this.dataset.type;
+            document.getElementById('walkinForm').style.display = type === 'walkin' ? 'block' : 'none';
+            document.getElementById('reservedForm').style.display = type === 'reserved' ? 'block' : 'none';
+            document.getElementById('reservationInfo').style.display = 'none';
+        });
+    });
+
+    function loadReservationInfo() {
+        const select = document.getElementById('reservationId');
+        const infoBox = document.getElementById('reservationInfo');
+        if (!select.value) {
+            infoBox.style.display = 'none';
+            return;
+        }
+        const data = reservationMap[select.value];
+        if (data) {
+            document.getElementById('resCustomerName').textContent = data.customerName;
+            document.getElementById('resPhone').textContent = data.phone || 'Không có';
+            document.getElementById('resTable').textContent = data.tableName;
+            document.getElementById('resPeople').textContent = data.numPeople + ' người';
+            document.getElementById('resTime').textContent = data.start;
+
+            document.getElementById('finalTableId').value = data.tableId;
+            document.getElementById('finalGuestCount').value = data.numPeople;
+            document.getElementById('finalCustomerName').value = data.customerName;
+
+            infoBox.style.display = 'block';
+        }
+    }
+
+    function addDishRow() {
+        const template = document.getElementById('dishTemplate');
+        const clone = template.content.cloneNode(true);
+        document.getElementById('dishContainer').appendChild(clone);
+    }
+
+    async function createOrder() {
+        const type = document.querySelector('.type-btn.active').dataset.type;
+        let tableId, guestCount, reservationId = null, customerName = 'Khách vãng lai';
+
+        if (type === 'walkin') {
+            tableId = document.getElementById('tableIdWalkin').value;
+            guestCount = document.getElementById('guestCountWalkin').value;
+            customerName = document.getElementById('walkinName').value.trim() || 'Khách vãng lai';
+            if (!tableId || !guestCount) return showToast('Vui lòng chọn bàn và số khách!', 'error');
+        } else {
+            reservationId = document.getElementById('reservationId').value;
+            if (!reservationId) return showToast('Vui lòng chọn đặt bàn!', 'error');
+            tableId = document.getElementById('finalTableId').value;
+            guestCount = document.getElementById('finalGuestCount').value;
+            customerName = document.getElementById('finalCustomerName').value;
+        }
+
+        const orderDetails = [];
+        document.querySelectorAll('#dishContainer .dish-row').forEach(row => {
+            const dishId = row.querySelector('.dish-select').value;
+            const qty = row.querySelector('.quantity').value;
+            if (dishId && qty > 0) {
+                orderDetails.push({ dishId: Number(dishId), quantity: Number(qty) });
+            }
+        });
+
+
+
+        const payload = {
+            type, tableId: Number(tableId), reservationId: reservationId ? Number(reservationId) : null,
+            guestCount: Number(guestCount), note: document.getElementById('note').value.trim() || null,
+            walkinCustomerName: type === 'walkin' ? customerName : null,
+            orderDetails
+        };
+
+        try {
+            const res = await fetch('/orders/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                showToast('Tạo đơn hàng thành công!');
+                setTimeout(() => location.href = '/orders', 1500);
+            } else {
+                const msg = await res.text();
+                showToast(msg || 'Lỗi tạo đơn hàng', 'error');
+            }
+        } catch (e) {
+            showToast('Lỗi kết nối!', 'error');
+        }
+    }
+
+    function showToast(msg, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<span>${msg}</span><span class="close-toast" onclick="this.parentElement.remove()">x</span>`;
+        document.getElementById('toastContainer').appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 100);
+        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 500); }, 4000);
+    }
+</script>
+</body>
+</html>
