@@ -12,6 +12,22 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
+    @Query("""
+    SELECT r FROM Reservation r
+    WHERE 
+        (r.status = com.restaurant.management.model.ReservationStatus.PENDING
+         OR r.status = com.restaurant.management.model.ReservationStatus.CONFIRMED)
+    AND r.reservationStart BETWEEN :startOfDay AND :endOfDay
+    ORDER BY r.reservationStart ASC
+""")
+    List<Reservation> findActiveReservationsForToday(
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay
+    );
+
+
+
+
 
     List<Reservation> findByTableId(Long tableId);
     @Query("""
