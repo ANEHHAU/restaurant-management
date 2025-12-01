@@ -1,22 +1,150 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-
 <head th:replace="layout/header :: head"></head>
 
-<body>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f7fa;
+        margin: 0;
+        padding: 20px;
+        color: #333;
+    }
 
+    h1 {
+        text-align: center;
+        color: #1a4971;
+        margin-bottom: 40px;
+        font-size: 2.4rem;
+        font-weight: 600;
+    }
+
+    /* Thống kê nhanh - Card đẹp lung linh */
+    .stats-container {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        flex-wrap: wrap;
+        max-width: 1200px;
+        margin: 0 auto 50px auto;
+    }
+
+    .stat-card {
+        background: white;
+        width: 280px;
+        padding: 30px 20px;
+        border-radius: 16px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: all 0.3s ease;
+        border-top: 6px solid #1976d2;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 35px rgba(25, 118, 210, 0.2);
+    }
+
+    .stat-card i {
+        font-size: 48px;
+        color: #1976d2;
+        margin-bottom: 15px;
+    }
+
+    .stat-card h3 {
+        margin: 0 0 10px 0;
+        color: #1a4971;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .stat-card .number {
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #1976d2;
+        margin: 10px 0;
+    }
+
+    .stat-card .label {
+        color: #666;
+        font-size: 0.95rem;
+    }
+
+    /* Quick Links - Nút điều hướng */
+    .quick-links {
+        text-align: center;
+        margin-top: 50px;
+    }
+
+    .quick-links h2 {
+        color: #1a4971;
+        margin-bottom: 30px;
+    }
+
+    .link-grid {
+        display: flex;
+        justify-content: center;
+        gap: 25px;
+        flex-wrap: wrap;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .link-btn {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 18px 32px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 16px;
+        box-shadow: 0 4px 15px rgba(25, 118, 210, 0.15);
+        transition: all 0.3s ease;
+        min-width: 220px;
+    }
+
+    .link-btn:hover {
+        background: #bbdefb;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(25, 118, 210, 0.25);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .stats-container { gap: 20px; }
+        .stat-card { width: 100%; max-width: 350px; }
+    }
+</style>
+
+<body>
 <div th:replace="layout/header :: menu"></div>
 
 <h1>Hệ thống quản lý nhà hàng</h1>
 
-<div>
-    <h3>Thống kê nhanh</h3>
-    <ul>
-        <li>Tổng số bàn: <b th:text="${totalTables}"></b></li>
-        <li>Tổng khách hàng: <b th:text="${totalCustomers}"></b></li>
-        <li>Tổng đơn hàng: <b th:text="${totalOrders}"></b></li>
-    </ul>
+<!-- THỐNG KÊ NHANH -->
+<div class="stats-container">
+    <div class="stat-card">
+        <i>🪑</i>
+        <h3>Tổng số bàn</h3>
+        <div class="number" th:text="${totalTables}">0</div>
+        <div class="label">Bàn đang hoạt động</div>
+    </div>
+
+    <div class="stat-card">
+        <i>👥</i>
+        <h3>Tổng khách hàng</h3>
+        <div class="number" th:text="${totalCustomers}">0</div>
+        <div class="label">Khách hàng đã đăng ký</div>
+    </div>
+
+    <div class="stat-card">
+        <i>🧾</i>
+        <h3>Tổng đơn hàng</h3>
+        <div class="number" th:text="${totalOrders}">0</div>
+        <div class="label">Đơn hàng đã phục vụ</div>
+    </div>
 </div>
+
 
 </body>
 </html>

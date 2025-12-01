@@ -1,62 +1,328 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-
 <head th:replace="layout/header :: head"></head>
 
-<body>
+<style>
+    .action-box {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        min-width: 220px;
+    }
 
+    .action-box button {
+        width: 100%;
+        padding: 6px 0;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        color: white;
+    }
+
+    .btn-none {
+        background: transparent;
+        cursor: default;
+    }
+
+
+
+    .btn-confirm {
+        background: #66bb6a;
+        color: white;
+        padding: 7px 16px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+
+        /* Shadow xanh lá pastel */
+        box-shadow: 0 2px 6px rgba(102, 187, 106, 0.45);
+    }
+
+    .btn-confirm:hover {
+        background: #4caf50; /* xanh đậm đẹp */
+
+        /* Shadow xanh đậm hơn */
+        box-shadow: 0 4px 12px rgba(56, 142, 60, 0.45);
+    }
+
+
+    .btn-checkin {
+        background: #FFCC80;
+        color: white;
+        padding: 7px 16px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+
+        /* shadow cam pastel */
+        box-shadow: 0 2px 6px rgba(255, 183, 77, 0.45);
+    }
+
+    .btn-checkin:hover {
+        background: #FFB74D;
+
+        /* shadow cam đậm hơn */
+        box-shadow: 0 4px 12px rgba(255, 148, 0, 0.45);
+    }
+
+
+
+    /* EDIT – xanh dương pastel (giống anh dùng) */
+    .btn-edit {
+        background: #64b5f6;
+        color: white;
+        padding: 7px 16px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(100,181,246,0.3);
+    }
+    .btn-edit:hover {
+        background: #1976d2;
+        box-shadow: 0 4px 12px rgba(25,118,210,0.4);
+    }
+
+    /* DELETE – đỏ pastel */
+    .btn-delete {
+        background: #ef9a9a;
+        color: white;
+        padding: 7px 16px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(239,154,154,0.3);
+    }
+    .btn-delete:hover {
+        background: #e53935;
+        box-shadow: 0 4px 12px rgba(229,57,53,0.4);
+    }
+
+    /* DETAIL – tím pastel / hồng tím */
+    .btn-detail {
+        background: #ce93d8;   /* tím pastel */
+        color: white;
+        padding: 7px 16px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(206,147,216,0.4);
+    }
+    .btn-detail:hover {
+        background: #ab47bc;
+        box-shadow: 0 4px 12px rgba(171,71,188,0.4);
+    }
+
+
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f7fa;   /* Nền xám nhạt toàn trang */
+        margin: 0;
+        padding: 20px;
+        color: #333;
+    }
+
+    h1 {
+        text-align: center;
+        color: #1a4971;
+        margin-bottom: 30px;
+        font-size: 2.3rem;
+        font-weight: 600;
+    }
+
+    /* ĐÃ SỬA DẤU NGOẶC THỪA – BÂY GIỜ ĐẸP NHƯ CÁC TRANG KHÁC */
+    .table-container {
+        width: 95%;
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        padding: 20px;
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 15px;
+    }
+
+    th {
+        background: #1976d2;
+        color: white;
+        padding: 16px 10px;
+        text-align: center;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    td {
+        text-align: center;
+        padding: 14px 10px;
+        vertical-align: middle;
+    }
+
+    tr:nth-child(even) { background-color: #f8fbff; }
+    tr:hover           { background-color: #edf4ff; }
+
+    /* Badge trạng thái đặt bàn */
+    .badge {
+        padding: 7px 16px;
+        border-radius: 10px;
+        font-weight: bold;
+        font-size: 0.92em;
+        min-width: 90px;
+        display: inline-block;
+    }
+    .badge-PENDING   { background:#fff3cd; color:#856404; }
+    .badge-CONFIRMED { background:#d4edda; color:#155724; }
+    .badge-CANCELLED { background:#f8d7da; color:#721c24; }
+    .badge-COMPLETED { background:#d1ecf1; color:#0c5460; }
+    .badge-NO_SHOW   { background:#e2e3e5; color:#6c757d; }
+
+    .empty-message {
+        text-align: center;
+        padding: 90px 20px;
+        color: #888;
+        font-size: 1.25rem;
+        background: #f9f9f9;
+    }
+    .badge-IN_USE {
+        background: #2e7d32;   /* xanh đậm */
+        color: white;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-weight: bold;
+    }
+    .badge-NO_SHOW {
+        background: #6d4c41; /* nâu đậm */
+        color: white;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-weight: bold;
+    }
+
+
+</style>
+
+<body>
 <div th:replace="layout/header :: menu"></div>
 
-<h1>Danh sách Đặt bàn (Reservations)</h1>
+<h1>Danh sách Đặt bàn</h1>
 
-<table border="1" cellspacing="0" cellpadding="8">
-    <tr>
-        <th>ID</th>
-        <th>Tên khách hàng</th>
-        <th>Số điện thoại</th>
-        <th>Bàn số</th>
-        <th>Thời gian bắt đầu</th>
-        <th>Thời gian kết thúc</th>
-        <th>Số người</th>
-        <th>Trạng thái</th>
-        <th>Ghi chú</th>
-        <th>Ngày tạo</th>
-    </tr>
+<div class="table-container">
+    <table>
+        <thead>
+        <tr>
+            <th>STT</th>
+            <th>Tên khách hàng</th>
+            <th>Số điện thoại</th>
+            <th>Bàn</th>
+            <th>Bắt đầu</th>
+            <th>Kết thúc</th>
+            <th>Số người</th>
+            <th>Trạng thái</th>
+            <th>Ghi chú</th>
+            <th>Ngày tạo</th>
+            <th>Hành động</th>
+        </tr>
+        </thead>
 
-    <!-- Trường hợp không có reservation -->
-    <tr th:if="${#lists.isEmpty(reservations)}">
-        <td colspan="10" style="text-align:center;">Chưa có đặt bàn nào</td>
-    </tr>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(reservations)}">
+            <td colspan="10" class="empty-message">
+                Chưa có lịch đặt bàn nào<br>
+                Khách hàng sẽ được thêm vào danh sách khi đặt bàn thành công
+            </td>
+        </tr>
+        <tr th:each="r, iter : ${reservations}">
+            <td th:text="${iter.index + 1}"></td>
+            <td th:text="${r.customer?.fullName} ?: '—'"></td>
+            <td th:text="${r.customer?.phone} ?: '—'"></td>
+            <td th:text="${r.table?.tableName} ?: '—'"></td>
+            <td th:text="${#temporals.format(r.reservationStart, 'dd/MM/yyyy HH:mm')}"></td>
+            <td th:text="${#temporals.format(r.reservationEnd, 'dd/MM/yyyy HH:mm')}"></td>
+            <td th:text="${r.numPeople}"></td>
+            <td th:with="now=${T(java.time.LocalDateTime).now()},
+             start=${r.reservationStart}">
 
-    <!-- Duyệt danh sách reservation -->
-    <tr th:each="r : ${reservations}">
-        <td th:text="${r.id}"></td>
+                <!-- HIỂN THỊ TRỄ GIỜ CHỈ KHI ĐÚNG LOGIC -->
+                <span th:if="${r.status.name() == 'CONFIRMED'
+                  and start != null
+                  and now.isAfter(start)}"
+                      class="badge badge-LATE">
+        Trễ giờ
+    </span>
 
-        <!-- Tên khách hàng -->
-        <td th:text="${r.customer.fullName}"></td>
+                <!-- THẺ TRẠNG THÁI CHÍNH -->
+                <th:block th:switch="${r.status.name()}">
+                    <span th:case="'PENDING'"     class="badge badge-PENDING">Chờ xác nhận</span>
+                    <span th:case="'CONFIRMED'"   class="badge badge-CONFIRMED">Đã xác nhận</span>
+                    <span th:case="'IN_USE'"      class="badge badge-IN_USE">Đang dùng bữa</span>
+                    <span th:case="'CANCELLED'"   class="badge badge-CANCELLED">Đã hủy</span>
+                    <span th:case="'COMPLETED'"   class="badge badge-COMPLETED">Hoàn thành</span>
+                    <span th:case="'NO_SHOW'"     class="badge badge-NO_SHOW">Không đến</span>
 
-        <!-- Số điện thoại khách -->
-        <td th:text="${r.customer.phone}"></td>
+                    <span th:case="*" class="badge">[[${r.status}]]</span>
+                </th:block>
 
-        <!-- Bàn -->
-        <td th:text="${r.table.tableName}"></td>
+            </td>
 
-        <!-- Thời gian bắt đầu -->
-        <td th:text="${#temporals.format(r.reservationStart,'dd/MM/yyyy HH:mm')}"></td>
 
-        <!-- Thời gian kết thúc -->
-        <td th:text="${#temporals.format(r.reservationEnd,'dd/MM/yyyy HH:mm')}"></td>
 
-        <td th:text="${r.numPeople}"></td>
+            <td th:text="${r.note ?: '—'}"></td>
+            <td th:text="${#temporals.format(r.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
 
-        <td th:text="${r.status}"></td>
 
-        <td th:text="${r.note}"></td>
 
-        <td th:text="${#temporals.format(r.createdAt,'dd/MM/yyyy HH:mm')}"></td>
-    </tr>
+            <td>
+                <div class="action-box">
 
-</table>
+                    <!-- Ô 1: Action chính -->
+                    <th:block th:switch="${r.status.name()}">
+
+                        <button th:case="'PENDING'"     class="btn-confirm" th:onclick="'openConfirm(' + ${r.id} + ')'">Xác nhận</button>
+                        <button th:case="'CONFIRMED'"   class="btn-checkin" th:onclick="'openCheckIn(' + ${r.id} + ')'">Check-in</button>
+                        <button th:case="'IN_USE'"      class="btn-detail"  th:onclick="'openOrderItems(' + ${r.id} + ')'">Xem món</button>
+                        <button th:case="'COMPLETED'"   class="btn-detail"  th:onclick="'openInvoice(' + ${r.id} + ')'">Hóa đơn</button>
+
+                        <!-- CANCELLED / NO_SHOW / fallback -->
+                        <button th:case="'CANCELLED'" class="btn-none">—</button>
+                        <button th:case="'NO_SHOW'"   class="btn-none">—</button>
+                        <button th:case="*"           class="btn-none">—</button>
+
+                    </th:block>
+
+                    <!-- Ô 2: Sửa -->
+                    <button th:if="${r.status.name() != 'CANCELLED' and r.status.name() != 'NO_SHOW'}"
+                            class="btn-edit" th:onclick="'openEdit(' + ${r.id} + ')'">
+                        Sửa
+                    </button>
+
+                    <button th:if="${r.status.name() == 'CANCELLED' or r.status.name() == 'NO_SHOW'}"
+                            class="btn-none">—</button>
+
+
+                    <!-- Ô 3: Xóa -->
+                    <button class="btn-delete" th:onclick="'openDelete(' + ${r.id} + ')'">
+                        Xóa
+                    </button>
+
+                </div>
+            </td>
+
+        </tr>
+        </tbody>
+    </table>
+</div>
 
 </body>
 </html>

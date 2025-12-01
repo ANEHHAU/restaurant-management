@@ -5,182 +5,192 @@
     <title th:text="${title}">Restaurant System</title>
 
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f9f9f9;
+        }
 
+        /* ===== MENU CHÍNH ===== */
         .menu {
             display: flex;
-            gap: 20px;
             align-items: center;
-            position: relative;
+            justify-content: space-between;
+            padding: 20px 40px;
+            border-bottom: 1px solid #ddd;
+            background: #f9f9f9;
         }
 
+        /* ===== LOGO ===== */
+        .menu-left {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .menu-left > a {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1976d2;
+            text-decoration: none;
+        }
+        .menu-left > a span {
+            color: #28a745;
+        }
+
+        /* ===== Nút TRANG CHỦ (PILL) ===== */
+        .menu-left .menu-item > a,
+        .menu-right .menu-item > a {
+            display: inline-block;
+            padding: 12px 22px;
+            border-radius: 999px;
+            border: 1.5px solid #ddd;
+            background: #ffffff;
+            color: #333;
+            font-size: 17px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        /* Hover */
+        .menu-item > a:not(.active):hover {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+            background: #f8fbff;
+        }
+
+        /* Active */
+        .menu-item > a.active {
+            background: #007bff !important;
+            color: #fff !important;
+            border-color: #007bff !important;
+            box-shadow: 0 3px 10px rgba(0,123,255,0.45) !important;
+        }
+
+        .menu-right {
+            display: flex;
+            gap: 18px;
+        }
+
+        /* ===== SUBMENU ===== */
         .menu-item {
             position: relative;
-            display: inline-block;
         }
 
-        /* Submenu */
         .submenu {
             position: absolute;
-            top: 100%;           /* Sát ngay dưới menu cha */
+            top: 100%;
             left: 0;
             display: none;
-            flex-direction: column;     /* mỗi dòng 1 item */
-            background: #fff;
+            flex-direction: column;
+            background: white;
             border: 1px solid #ddd;
-            min-width: 180px;
             border-radius: 8px;
+            min-width: 200px;
             padding: 6px 0;
-            z-index: 999;
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            z-index: 999;
         }
 
-        /* Hiển thị submenu khi hover */
         .menu-item:hover .submenu {
-            display: flex !important;   /* luôn hiện khi hover menu hoặc submenu */
+            display: flex;
         }
 
         .submenu a {
-            padding: 10px 15px;
-            display: block;
-            white-space: nowrap;        /* không xuống hàng */
+            padding: 10px 18px;
             text-decoration: none;
             color: #333;
-            font-size: 14px;
+            font-size: 15px;
+            white-space: nowrap;
         }
-
         .submenu a:hover {
             background: #f2f2f2;
         }
-        body {
-            font-family: Arial, sans-serif;
-            margin: 30px;
-        }
 
-        .menu {
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #ccc;
-        }
-
-        .menu a {
-            display: inline-block;
-            margin-right: 12px;
-            padding: 6px 14px;
-            font-weight: 600;
-            text-decoration: none;
-            border-radius: 999px;      /* giống pill button */
-            border: 1px solid #ddd;
-            background: #ffffff;
-            color: #333;
-            box-shadow: none;
-            transition: background 0.2s ease, color 0.2s ease,
-            box-shadow 0.2s ease, transform 0.1s ease;
-        }
-
-        /* Hover: đổ bóng + nhích nhẹ lên */
-        .menu a:hover {
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-            transform: translateY(-1px);
-        }
-
-        /* Nút đang ở TRANG HIỆN TẠI */
-        .menu a.active {
-            background: #007bff;
-            color: #ffffff;
-            border-color: #007bff;
-            box-shadow: 0 3px 10px rgba(0,123,255,0.45);
-        }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 15px;
-        }
-
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-        }
-
-        th {
-            background: #f2f2f2;
-        }
     </style>
 </head>
 
 <body th:fragment="header">
 <div th:fragment="menu" class="menu">
-    <div class="menu-item">
-        <a href="/">Trang chủ</a>
-    </div>
 
-    <!-- QUẢN LÝ BÀN -->
-    <div class="menu-item">
-        <a href="/tables">Quản lý bàn</a>
-        <div class="submenu">
-            <a href="/tables/new">➕ Thêm mới</a>
-            <a href="/tables/edit">✏️ Sửa</a>
-            <a href="/tables/delete">🗑 Xóa</a>
+    <!-- LOGO + TRANG CHỦ pill giống các nút khác -->
+    <div class="menu-left">
+        <a href="/">
+            NHÀ HÀNG <span>DELICIOUS</span>
+        </a>
+
+        <div class="menu-item">
+            <a href="/">Trang chủ</a>
         </div>
     </div>
 
-    <!-- KHÁCH HÀNG -->
-    <div class="menu-item">
-        <a href="/customers">Quản lý khách hàng</a>
-        <div class="submenu">
-            <a href="/customers/new">➕ Thêm mới</a>
-            <a href="/customers/edit">✏️ Sửa</a>
-            <a href="/customers/delete">🗑 Xóa</a>
+    <!-- MENU PHẢI -->
+    <div class="menu-right">
+
+        <div class="menu-item">
+            <a href="/tables">Quản lý bàn</a>
+            <div class="submenu">
+                <a href="/tables/new">➕ Thêm mới</a>
+<!--                <a href="/tables/edit">✏️ Sửa</a>-->
+<!--                <a href="/tables/delete">🗑 Xóa</a>-->
+            </div>
         </div>
+
+        <div class="menu-item">
+            <a href="/customers">Quản lý khách hàng</a>
+            <div class="submenu">
+                <a href="/customers/new">➕ Thêm mới</a>
+<!--                <a href="/customers/edit">✏️ Sửa</a>-->
+<!--                <a href="/customers/delete">🗑 Xóa</a>-->
+            </div>
+        </div>
+
+        <div class="menu-item">
+            <a href="/orders">Quản lý đơn hàng</a>
+            <div class="submenu">
+                <a href="/orders/new">➕ Thêm mới</a>
+<!--                <a href="/orders/edit">✏️ Sửa</a>-->
+<!--                <a href="/orders/delete">🗑 Xóa</a>-->
+            </div>
+        </div>
+
+        <div class="menu-item">
+            <a href="/reservations">Quản lý đặt bàn</a>
+            <div class="submenu">
+                <a href="/reservations/new">➕ Thêm mới</a>
+<!--                <a href="/reservations/edit">✏️ Sửa</a>-->
+<!--                <a href="/reservations/delete">🗑 Xóa</a>-->
+            </div>
+        </div>
+
     </div>
 
-    <!-- ĐƠN HÀNG -->
-    <div class="menu-item">
-        <a href="/orders">Quản lý đơn hàng</a>
-        <div class="submenu">
-            <a href="/orders/new">➕ Thêm mới</a>
-            <a href="/orders/edit">✏️ Sửa</a>
-            <a href="/orders/delete">🗑 Xóa</a>
-        </div>
-    </div>
-
-    <!-- ĐẶT BÀN -->
-    <div class="menu-item">
-        <a href="/reservations">Quản lý đặt bàn</a>
-        <div class="submenu">
-            <a href="/reservations/new">➕ Thêm mới</a>
-            <a href="/reservations/edit">✏️ Sửa</a>
-            <a href="/reservations/delete">🗑 Xóa</a>
-        </div>
-    </div>
-
+    <!-- ACTIVE SCRIPT -->
     <script>
-        // Tự động đánh dấu nút đang ở trang hiện tại
         document.addEventListener('DOMContentLoaded', function () {
-            const pathRaw = window.location.pathname || '/';
-            // bỏ / cuối nếu có, ví dụ /tables/ -> /tables
-            const cleaned = pathRaw.replace(/\/+$/, '') || '/';
+            const path = window.location.pathname.replace(/\/+$/, "") || "/";
 
-            const links = document.querySelectorAll('.menu a');
+            const mainLinks = document.querySelectorAll(
+                ".menu-left .menu-item > a, .menu-right .menu-item > a"
+            );
 
-            links.forEach(link => {
-                const href = link.getAttribute('href'); // /, /tables, /customers, /orders
+            mainLinks.forEach(a => {
+                const href = a.getAttribute("href");
 
-                // Trang chủ
-                if (href === '/') {
-                    if (cleaned === '/' || cleaned.endsWith('/index')) {
-                        link.classList.add('active');
-                    }
+                if (href === "/") {
+                    if (path === "/") a.classList.add("active");
                     return;
                 }
 
-                // Các trang còn lại: nếu URL kết thúc bằng href hoặc chứa /{href}/
-                if (cleaned.endsWith(href) || cleaned.includes(href + '/')) {
-                    link.classList.add('active');
+                if (path === href || path.startsWith(href + "/")) {
+                    a.classList.add("active");
                 }
             });
         });
     </script>
+
 </div>
 </body>
 </html>
+

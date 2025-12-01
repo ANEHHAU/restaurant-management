@@ -6,12 +6,12 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/customer")
+@RequestMapping("/reservation")
 public class ReservationRestController {
 
     private final CustomerRepository customerRepository;
 
-    @GetMapping("/find")
+    @GetMapping("/findCustomer")
     public CustomerResponse findCustomerByPhone(@RequestParam String phone) {
 
         return customerRepository.findByPhone(phone)
