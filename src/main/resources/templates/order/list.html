@@ -36,12 +36,12 @@
 <div class="table-container">
     <table>
         <tr>
-            <th>ID</th>
+            <th>STT</th>
             <th>Khách hàng</th>
             <th>Bàn</th>
             <th>Thời gian đặt</th>
             <th>Trạng thái</th>
-            <th>Món ăn</th>
+            <th>Chi tiết món</th>
         </tr>
 
         <tr th:if="${#lists.isEmpty(orders)}">
@@ -50,8 +50,8 @@
             </td>
         </tr>
 
-        <tr th:each="o : ${orders}">
-            <td th:text="${o.id}"></td>
+        <tr th:each="o, iter : ${orders}">
+            <td th:text="${iter.index + 1}"></td>
 
             <td>
                 <span th:if="${o.customer != null}" th:text="${o.customer.fullName}"></span>

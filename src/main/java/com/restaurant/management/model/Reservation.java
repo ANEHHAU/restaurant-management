@@ -1,5 +1,6 @@
 package com.restaurant.management.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -20,11 +21,13 @@ public class Reservation {
 
     // Nhiều đặt bàn thuộc 1 khách
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
     // Nhiều đặt bàn thuộc 1 bàn
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "table_id", nullable = false)
     private RestaurantTable table;
 

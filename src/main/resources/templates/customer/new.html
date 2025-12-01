@@ -239,7 +239,7 @@
         const data = { fullName, phone, address };
 
         try {
-            let res = await fetch("/customers/create", {
+            let res = await fetch("/api/customers/create", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
