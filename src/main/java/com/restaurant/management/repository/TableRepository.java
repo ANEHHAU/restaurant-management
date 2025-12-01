@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface TableRepository extends JpaRepository<RestaurantTable, Long> {
 
+    @Query("SELECT t FROM RestaurantTable t WHERE t.status = 'INACTIVE'")
+    List<RestaurantTable> findAllInActiveTables();
 
 
     @Query(value = """

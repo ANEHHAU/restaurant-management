@@ -1,206 +1,110 @@
-<!--<!DOCTYPE html>-->
-<!--<html xmlns:th="http://www.thymeleaf.org">-->
-<!--<head th:replace="layout/header :: head"></head>-->
-
-<!--<style>-->
-
-<!--    .btn-view-schedule {-->
-<!--        background: #e3f2fd;              /* xanh dương nhạt rất đẹp */-->
-<!--        color: #1976d2;                   /* chữ xanh đậm */-->
-<!--        border: none;-->
-<!--        padding: 8px 16px;-->
-<!--        font-size: 14px;-->
-<!--        font-weight: 600;-->
-<!--        border-radius: 8px;               /* bo góc tròn */-->
-<!--        cursor: pointer;-->
-<!--        transition: all 0.25s ease;-->
-<!--        box-shadow: 0 2px 4px rgba(25, 118, 210, 0.15);-->
-<!--    }-->
-
-<!--    .btn-view-schedule:hover {-->
-<!--        background: #bbdefb;-->
-<!--        transform: translateY(-1px);-->
-<!--        box-shadow: 0 4px 8px rgba(25, 118, 210, 0.25);-->
-<!--    }-->
-
-<!--    .btn-view-schedule:active {-->
-<!--        transform: translateY(0);-->
-<!--        box-shadow: 0 1px 2px rgba(25, 118, 210, 0.2);-->
-<!--    }-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 
-
-<!--    /* STATUS TABLE */-->
-<!--    .status-active { background:#d4f8d4; color:#0f730c; padding:5px 10px; border-radius:6px; font-weight:bold; }-->
-<!--    .status-inactive { background:#fff4c2; color:#8a6d00; padding:5px 10px; border-radius:6px; font-weight:bold; }-->
-
-<!--    /* SCHEDULE STATUS BADGE */-->
-<!--    .st-pending { background:#ffe7a3; color:#8a6700; padding:4px 8px; border-radius:5px; font-weight:bold; }-->
-<!--    .st-confirmed { background:#c8ffd4; color:#0a6c20; padding:4px 8px; border-radius:5px; font-weight:bold; }-->
-<!--    .st-cancelled { background:#ffd1d1; color:#a30000; padding:4px 8px; border-radius:5px; font-weight:bold; }-->
-<!--    .st-completed { background:#d7e6ff; color:#003c91; padding:4px 8px; border-radius:5px; font-weight:bold; }-->
-
-<!--    .overlay {-->
-<!--        display:none; position:fixed; inset:0;-->
-<!--        background:rgba(0,0,0,0.4);-->
-<!--        z-index:999; justify-content:center; align-items:center;-->
-<!--    }-->
-
-<!--    .popup {-->
-<!--        background:white; width:750px; max-height:80vh;-->
-<!--        padding:20px; border-radius:12px;-->
-<!--        overflow-y:auto; position:relative;-->
-<!--        box-shadow:0 4px 15px rgba(0,0,0,0.3);-->
-<!--    }-->
-
-<!--    .btn-close {-->
-<!--        position:absolute;-->
-<!--        top:10px; right:10px;-->
-<!--        background:red; color:white;-->
-<!--        padding:6px 12px; border:none;-->
-<!--        border-radius:6px; cursor:pointer;-->
-<!--    }-->
-
-<!--    .past { background:#e0e0e0; }-->
-<!--    .upcoming { background:#d8e9ff; }-->
-
-<!--    th, td { border:1px solid #ccc; padding:8px; }-->
-<!--</style>-->
+<!--            @todo thêm thông tin ở lịch đặt bàn để chuẩn bị ví dụ như ngày sinh nhật vv -->
+<!-- @todo nút check out chức năng tạo hóa đơn chi tiết món xác nhận thanh toán chuyển trạng thái rese
+ @todo nếu có vì lỡ khách trực tiếp thì ko có rese chuyển trạng thái bàn sang chưa hoạt động-->
 
 
-<!--<body>-->
-<!--<div th:replace="layout/header :: menu"></div>-->
-
-<!--<h1>Quản lý bàn</h1>-->
-
-<!--<table>-->
-<!--    <tr>-->
-<!--        <th>ID</th>-->
-<!--        <th>Tên bàn</th>-->
-<!--        <th>Số ghế</th>-->
-<!--        <th>Trạng thái</th>-->
-<!--        <th>Tổng doanh thu</th>-->
-<!--        <th>Lịch đặt bàn</th>-->
-<!--    </tr>-->
-
-<!--    <tr th:each="t : ${tables}">-->
-<!--        <td th:text="${t[0]}"></td>-->
-<!--        <td th:text="${t[1]}"></td>-->
-<!--        <td th:text="${t[2]}"></td>-->
-
-<!--        <td>-->
-<!--            <span th:class="${#strings.equalsIgnoreCase(t[3],'ACTIVE') ? 'status-active':'status-inactive'}"-->
-<!--                  th:text="${#strings.equalsIgnoreCase(t[3],'ACTIVE') ? 'Đang hoạt động':'Chưa hoạt động'}">-->
-<!--            </span>-->
-<!--        </td>-->
-
-<!--        <td th:text="${#numbers.formatDecimal(t[4],0,'COMMA',0,'POINT')} + ' ₫'"></td>-->
-
-
-<!--        <td>-->
-<!--            <button class="btn-view-schedule"-->
-<!--                    th:data-table-id="${t[0]}"-->
-<!--                    th:data-table-name="${t[1]}"-->
-<!--                    onclick="handleShowSchedule(this)">-->
-<!--                Chi tiết-->
-<!--            </button>-->
-<!--        </td>-->
-
-<!--    </tr>-->
-<!--</table>-->
-
-
-<!--&lt;!&ndash; POPUP &ndash;&gt;-->
-<!--<div id="overlay" class="overlay">-->
-<!--    <div class="popup" id="popup-content"></div>-->
-<!--</div>-->
-
-<!--<script>-->
-<!--    function handleShowSchedule(button) {-->
-<!--        const tableId = button.getAttribute('data-table-id');-->
-<!--        const tableName = button.getAttribute('data-table-name');-->
-<!--        showSchedule(tableId, tableName);-->
-<!--    }-->
-
-
-<!--    function closePopup() {-->
-<!--        document.getElementById("overlay").style.display = "none";-->
-<!--    }-->
-
-<!--    function showPopup(html) {-->
-<!--        document.getElementById("popup-content").innerHTML =-->
-<!--            '<button class="btn-close" onclick="closePopup()">Đóng</button>' + html;-->
-
-<!--        document.getElementById("overlay").style.display = "flex";-->
-<!--    }-->
-
-<!--    /* 🔵 SHOW SCHEDULE POPUP */-->
-<!--    async function showSchedule(tableId, tableName) {-->
-<!--        let res = await fetch(`/tables/${tableId}/schedule`);-->
-<!--        let data = await res.json();-->
-<!--        let now = new Date();-->
-
-<!--        if (data.length === 0) {-->
-<!--            showPopup(`<h3>Lịch đặt bàn – ${tableName}</h3><p>Không có lịch.</p>`);-->
-<!--            return;-->
-<!--        }-->
-
-<!--        let rows = data.map(r => {-->
-<!--            let start = new Date(r.start);-->
-<!--            let css = start < now ? "past" : "upcoming";-->
-
-<!--            let statusHtml =-->
-<!--                r.status === "PENDING"   ? "<span class='st-pending'>Chờ xác nhận</span>" :-->
-<!--                    r.status === "CONFIRMED" ? "<span class='st-confirmed'>Đã xác nhận</span>" :-->
-<!--                        r.status === "CANCELLED" ? "<span class='st-cancelled'>Đã hủy</span>" :-->
-<!--                            "<span class='st-completed'>Thành công</span>";-->
-
-<!--            return `-->
-<!--                <tr class="${css}">-->
-<!--                    <td>${r.customer} (${r.phone})</td>-->
-<!--                    <td>${formatDate(r.start)}</td>-->
-<!--                    <td>${formatDate(r.end)}</td>-->
-<!--                    <td>${statusHtml}</td>-->
-<!--                </tr>-->
-<!--            `;-->
-<!--        }).join("");-->
-
-<!--        let html = `-->
-<!--            <h3>Lịch đặt bàn – ${tableName}</h3>-->
-<!--            <table>-->
-<!--                <tr>-->
-<!--                    <th>Khách hàng</th>-->
-<!--                    <th>Bắt đầu</th>-->
-<!--                    <th>Kết thúc</th>-->
-<!--                    <th>Trạng thái</th>-->
-<!--                </tr>-->
-<!--                ${rows}-->
-<!--            </table>-->
-<!--        `;-->
-
-<!--        showPopup(html);-->
-<!--    }-->
-
-<!--    function formatDate(str) {-->
-<!--        let d = new Date(str);-->
-<!--        let dd = String(d.getDate()).padStart(2, '0');-->
-<!--        let mm = String(d.getMonth()+1).padStart(2, '0');-->
-<!--        let yyyy = d.getFullYear();-->
-
-<!--        let hh = String(d.getHours()).padStart(2, '0');-->
-<!--        let mi = String(d.getMinutes()).padStart(2, '0');-->
-
-<!--        return `${hh}:${mi} ${dd}/${mm}/${yyyy}`;-->
-<!--    }-->
-<!--</script>-->
-
-<!--</body>-->
-<!--</html>-->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="layout/header :: head"></head>
 
 <style>
+
+
+    .btn-placeholder {
+        visibility: hidden; /* ẩn nhưng vẫn giữ kích thước */
+        padding: 7px 16px;
+        border-radius: 10px;
+        border: none;
+        cursor: default;
+        font-weight: 600;
+        background: transparent;
+    }
+
+    .action-group {
+        display: grid;
+        grid-template-columns: 120px 90px 90px; /* 3 cột cố định */
+        column-gap: 6px;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .btn-empty {
+        visibility: hidden; /* Ẩn nhưng vẫn giữ kích thước */
+        padding: 7px 16px;
+        border-radius: 10px;
+    }
+
+
+    /* PAY – tím pastel */
+    .btn-pay {
+        background: #ce93d8; /* tím pastel */
+        color: white;
+        padding: 7px 16px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(206, 147, 216, 0.3);
+    }
+
+    .btn-pay:hover {
+        background: #ab47bc; /* tím đậm hơn */
+        box-shadow: 0 4px 12px rgba(171, 71, 188, 0.4);
+    }
+
+    /* EDIT – xanh pastel */
+    .btn-edit {
+        background: #81d4fa; /* xanh pastel */
+        color: white;
+        padding: 7px 16px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(129, 212, 250, 0.3);
+    }
+
+    .btn-edit:hover {
+        background: #29b6f6; /* xanh đậm hơn */
+        box-shadow: 0 4px 12px rgba(41, 182, 246, 0.4);
+    }
+
+    /* DELETE – đỏ pastel */
+    .btn-delete {
+        background: #ef9a9a; /* đỏ pastel */
+        color: white;
+        padding: 7px 16px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(239, 154, 154, 0.3);
+    }
+
+    .btn-delete:hover {
+        background: #ff7043; /* đỏ đậm hơn */
+        box-shadow: 0 4px 12px rgba(255, 112, 67, 0.4);
+    }
+
+
+    .btn-view {
+        padding: 5px 10px;
+        margin-top: 6px;
+        background: #BFA3FF;
+        color: white;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+    .btn-view:hover {
+        background: #9B6BFF;
+    }
+
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background: #f5f7fa;
@@ -224,7 +128,7 @@
         overflow-x: auto;
         background: white;
         border-radius: 12px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         padding: 20px;
     }
 
@@ -282,33 +186,86 @@
     }
 
     /* Các style cũ giữ nguyên */
-    .status-active { background:#d4f8d4; color:#0f730c; padding:5px 10px; border-radius:6px; font-weight:bold; }
-    .status-inactive { background:#fff4c2; color:#8a6d00; padding:5px 10px; border-radius:6px; font-weight:bold; }
+    .status-active {
+        background: #d4f8d4;
+        color: #0f730c;
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-weight: bold;
+    }
 
-    .st-pending { background:#ffe7a3; color:#8a6700; padding:4px 8px; border-radius:5px; font-weight:bold; }
-    .st-confirmed { background:#c8ffd4; color:#0a6c20; padding:4px 8px; border-radius:5px; font-weight:bold; }
-    .st-cancelled { background:#ffd1d1; color:#a30000; padding:4px 8px; border-radius:5px; font-weight:bold; }
-    .st-completed { background:#d7e6ff; color:#003c91; padding:4px 8px; border-radius:5px; font-weight:bold; }
+    .status-inactive {
+        background: #fff4c2;
+        color: #8a6d00;
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+
+    .st-pending {
+        background: #ffe7a3;
+        color: #8a6700;
+        padding: 4px 8px;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+
+    .st-confirmed {
+        background: #c8ffd4;
+        color: #0a6c20;
+        padding: 4px 8px;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+
+    .st-cancelled {
+        background: #ffd1d1;
+        color: #a30000;
+        padding: 4px 8px;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+
+    .st-completed {
+        background: #d7e6ff;
+        color: #003c91;
+        padding: 4px 8px;
+        border-radius: 5px;
+        font-weight: bold;
+    }
 
     .overlay {
-        display:none; position:fixed; inset:0;
-        background:rgba(0,0,0,0.5); backdrop-filter: blur(4px);
-        z-index:999; justify-content:center; align-items:center;
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 999;
+        justify-content: center;
+        align-items: center;
     }
 
     .popup {
-        background:white; width:780px; max-height:85vh;
-        padding:25px; border-radius:16px;
-        overflow-y:auto; position:relative;
-        box-shadow:0 10px 30px rgba(0,0,0,0.3);
+        background: white;
+        width: 780px;
+        max-height: 85vh;
+        padding: 25px;
+        border-radius: 16px;
+        overflow-y: auto;
+        position: relative;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
 
     .btn-close {
-        position:absolute;
-        top:12px; right:12px;
-        background:#e53935; color:white;
-        padding:8px 14px; border:none;
-        border-radius:8px; cursor:pointer;
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: #e53935;
+        color: white;
+        padding: 8px 14px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
         font-weight: bold;
         transition: 0.2s;
     }
@@ -317,8 +274,14 @@
         background: #c62828;
     }
 
-    .past { background:#e0e0e0; }
-    .upcoming { background:#d8e9ff; }
+    .past {
+        background: #e0e0e0;
+    }
+
+    .upcoming {
+        background: #d8e9ff;
+    }
+
 </style>
 
 <body>
@@ -330,19 +293,17 @@
 <div class="table-container">
     <table>
         <tr>
-            <th>ID</th>
+            <th>STT</th>
             <th>Tên bàn</th>
             <th>Số ghế</th>
-            <th>Trạng thái</th>
+            <th>Trạng thái hiện tại</th>
             <th>Tổng doanh thu</th>
             <th>Lịch đặt bàn</th>
-
-<!--       @todo     quản lý order-->
-<!--            món để quản lý món của bàn in hóa đơn in đơn bếp làm-->
+            <th>Hành động</th>
         </tr>
 
-        <tr th:each="t : ${tables}">
-            <td th:text="${t[0]}"></td>
+        <tr th:each="t, iter : ${tables}">
+            <td th:text="${iter.index + 1}"></td>
             <td th:text="${t[1]}"></td>
             <td th:text="${t[2]}"></td>
 
@@ -350,6 +311,11 @@
                 <span th:class="${#strings.equalsIgnoreCase(t[3],'ACTIVE') ? 'status-active' : 'status-inactive'}"
                       th:text="${#strings.equalsIgnoreCase(t[3],'ACTIVE') ? 'Đang hoạt động' : 'Chưa hoạt động'}">
                 </span>
+                <button class="btn-view"
+                        th:if="${#strings.equalsIgnoreCase(t[3],'ACTIVE')}"
+                        th:onclick="'openViewDish(' + ${t[0]} + ')'">
+                    Xem món
+                </button>
             </td>
 
             <td th:text="${#numbers.formatDecimal(t[4], 0, 'COMMA', 0, 'POINT')} + ' ₫'"></td>
@@ -362,6 +328,37 @@
                     Chi tiết
                 </button>
             </td>
+
+            <td>
+                <div class="action-group">
+
+                    <!-- Ô 1: Thanh toán hoặc placeholder -->
+                    <th:block th:if="${#strings.equalsIgnoreCase(t[3],'ACTIVE')}">
+                        <button class="btn-pay"
+                                th:onclick="'openPayment(' + ${t[0]} + ')'">
+                            Thanh toán
+                        </button>
+                    </th:block>
+
+                    <th:block th:if="${!#strings.equalsIgnoreCase(t[3],'ACTIVE')}">
+                        <button class="btn-placeholder">Thanh toán</button>
+                    </th:block>
+
+                    <!-- Ô 2: Sửa -->
+                    <button class="btn-edit"
+                            th:onclick="'openEdit(' + ${t[0]} + ')'">
+                        Sửa
+                    </button>
+
+                    <!-- Ô 3: Xóa -->
+                    <button class="btn-delete"
+                            th:onclick="'openDelete(' + ${t[0]} + ')'">
+                        Xóa
+                    </button>
+                </div>
+            </td>
+
+
         </tr>
     </table>
 </div>
@@ -372,6 +369,10 @@
 </div>
 
 <script>
+
+    // =========================
+    // HANDLE VIEW SCHEDULE
+    // =========================
     function handleShowSchedule(button) {
         const tableId = button.dataset.tableId;
         const tableName = button.dataset.tableName;
@@ -405,33 +406,33 @@
                 let css = start < now ? "past" : "upcoming";
 
                 let statusHtml =
-                    r.status === "PENDING"   ? "<span class='st-pending'>Chờ xác nhận</span>" :
+                    r.status === "PENDING" ? "<span class='st-pending'>Chờ xác nhận</span>" :
                         r.status === "CONFIRMED" ? "<span class='st-confirmed'>Đã xác nhận</span>" :
                             r.status === "CANCELLED" ? "<span class='st-cancelled'>Đã hủy</span>" :
                                 "<span class='st-completed'>Thành công</span>";
 
                 return `
-                    <tr class="${css}">
-                        <td>${r.customer || 'Khách lẻ'} (${r.phone || '—'})</td>
-                        <td>${formatDate(r.start)}</td>
-                        <td>${formatDate(r.end)}</td>
-                        <td>${statusHtml}</td>
-                    </tr>
-                `;
+                <tr class="${css}">
+                    <td>${r.customer || 'Khách lẻ'} (${r.phone || '—'})</td>
+                    <td>${formatDate(r.start)}</td>
+                    <td>${formatDate(r.end)}</td>
+                    <td>${statusHtml}</td>
+                </tr>
+            `;
             }).join("");
 
             let html = `
-                <h3>Lịch đặt bàn – ${tableName}</h3>
-                <table style="width:100%; border-collapse:collapse; margin-top:15px;">
-                    <tr style="background:#1976d2; color:white;">
-                        <th style="padding:12px;">Khách hàng</th>
-                        <th style="padding:12px;">Bắt đầu</th>
-                        <th style="padding:12px;">Kết thúc</th>
-                        <th style="padding:12px;">Trạng thái</th>
-                    </tr>
-                    ${rows}
-                </table>
-            `;
+            <h3>Lịch đặt bàn – ${tableName}</h3>
+            <table style="width:100%; border-collapse:collapse; margin-top:15px;">
+                <tr style="background:#1976d2; color:white;">
+                    <th style="padding:12px;">Khách hàng</th>
+                    <th style="padding:12px;">Bắt đầu</th>
+                    <th style="padding:12px;">Kết thúc</th>
+                    <th style="padding:12px;">Trạng thái</th>
+                </tr>
+                ${rows}
+            </table>
+        `;
 
             showPopup(html);
         } catch (err) {
@@ -448,6 +449,298 @@
         let mi = String(d.getMinutes()).padStart(2, '0');
         return `${hh}:${mi} ${dd}/${mm}/${yyyy}`;
     }
+
+
+    // =========================
+    //      POPUP EDIT BÀN
+    // =========================
+
+    function openEdit(tableId) {
+        fetch(`/tables/${tableId}`)
+            .then(res => res.json())
+            .then(t => {
+                let html = `
+                <h2>Chỉnh sửa bàn</h2>
+
+                <label>Tên bàn</label>
+                <input class="popup-input" id="tableName" value="${t.tableName}">
+
+                <label>Số ghế</label>
+                <input class="popup-input" id="seats" type="number" value="${t.seats}">
+
+                <button class="popup-btn-save" onclick="saveTableEdit(${t.id})">
+                    Lưu thay đổi
+                </button>
+            `;
+                showPopup(html);
+            });
+    }
+
+    function saveTableEdit(id) {
+        let body = {
+            tableName: document.getElementById("tableName").value,
+            seats: Number(document.getElementById("seats").value)
+        };
+
+        fetch(`/tables/update/${id}`, {
+            method: "PUT",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(body)
+        })
+            .then(async res => {
+                let msg = await res.text(); // đọc message backend trả về
+
+                if (!res.ok) {
+                    alert(msg);     // ❌ báo lỗi bằng alert
+                    return;
+                }
+
+                alert(msg);         // ✅ thông báo thành công
+                location.reload();
+            })
+            .catch(err => alert("Lỗi kết nối server!"));
+    }
+
+
+    // =========================
+    //      POPUP XÓA BÀN
+    // =========================
+
+    function openDelete(id) {
+        fetch(`/tables/${id}`)
+            .then(async res => {
+                let data = await res.json();
+
+                // ❌ Nếu backend trả lỗi -> hiển thị popup lỗi
+                if (!res.ok) {
+                    showPopup(`
+                    <h2>Lỗi không thể xóa bàn</h2>
+                    <p style="color:red; font-weight:600;">
+                        ${data.error || "Không thể thao tác trên bàn này."}
+                    </p>
+                `);
+                    throw new Error();
+                }
+
+                // ✅ Nếu không lỗi, hiển thị popup xóa
+                let t = data;
+
+                let html = `
+                <h2>Xóa bàn</h2>
+
+                <p>Bạn có chắc muốn xóa bàn <b>${t.tableName}</b>?</p>
+
+                <div style="padding:12px; background:#f4f4f4; border-radius:8px; margin-bottom:15px;">
+                    <b>ID bàn:</b> ${t.id}<br>
+                    <b>Số ghế:</b> ${t.seats}<br>
+                    <b>Trạng thái:</b> ${t.status}
+                </div>
+
+                <button class="popup-btn-save" style="background:#e53935"
+                        onclick="confirmDelete(${t.id})">
+                    Xóa ngay
+                </button>
+            `;
+
+                showPopup(html);
+            })
+            .catch(err => console.warn("Handled error"));
+    }
+
+
+    function confirmDelete(id) {
+        fetch(`/tables/delete/${id}`, {method: "DELETE"})
+            .then(async res => {
+                let text = await res.text(); // đọc message từ controller
+                if (res.ok) {
+                    alert(text);      // hiện thông báo từ backend
+                    location.reload();
+                } else {
+                    alert(text);      // báo lỗi từ backend
+                }
+            })
+            .catch(err => alert("Lỗi kết nối server!"));
+    }
+
+
+    function getCurrentDateTime() {
+        let d = new Date();
+        let dd = String(d.getDate()).padStart(2, '0');
+        let mm = String(d.getMonth() + 1).padStart(2, '0');
+        let yyyy = d.getFullYear();
+
+        let hh = String(d.getHours()).padStart(2, '0');
+        let mi = String(d.getMinutes()).padStart(2, '0');
+        let ss = String(d.getSeconds()).padStart(2, '0');
+
+        return `${hh}:${mi}:${ss} — ${dd}/${mm}/${yyyy}`;
+    }
+
+
+    // =========================
+    //   POPUP THANH TOÁN (BILL)
+    // =========================
+
+    function openPayment(tableId) {
+        fetch(`/tables/${tableId}/bill`)
+            .then(async res => {
+                let data = await res.json();
+                if (!res.ok) {
+                    showPopup(`<h2>Lỗi</h2><p>${data.error}</p>`);
+                    throw new Error();
+                }
+                return data;
+            })
+            .then(bill => {
+
+                // CHUẨN HÓA ITEMS → fix lỗi undefined + NaN
+                let items = bill.items.map((i, index) => {
+                    return {
+                        index: index + 1,
+                        name: i.name || i.dishName || "Không rõ",
+                        quantity: Number(i.quantity) || 0,
+                        price: Number(i.price || i.unitPrice) || 0
+                    };
+                });
+
+                // tạo dòng bảng
+                let rows = items.map(i => `
+                <tr>
+                    <td>${i.index}</td>
+                    <td>${i.name}</td>
+                    <td>${i.quantity}</td>
+                    <td>${i.price.toLocaleString('vi-VN')} ₫</td>
+                    <td>${(i.price * i.quantity).toLocaleString('vi-VN')} ₫</td>
+                </tr>
+            `).join("");
+
+                let total = Number(bill.total || 0);
+
+                let html = `
+    <h2>HÓA ĐƠN – ${bill.tableName}</h2>
+
+    <p style="font-size:14px; color:#555; margin-top:-10px;">
+        <b>Giờ in hóa đơn:</b> ${getCurrentDateTime()}
+    </p>
+
+    <table class="detail-table" style="width:100%; border-collapse:collapse; margin-bottom:15px;">
+        <tr style="background:#1976d2; color:white;">
+            <th>STT</th>
+            <th>Món ăn</th>
+            <th>Số lượng</th>
+            <th>Đơn giá</th>
+            <th>Thành tiền</th>
+        </tr>
+        ${rows}
+    </table>
+
+    <div style="font-size:16px; margin-top:10px;">
+        <b>Tổng tiền:</b> ${total.toLocaleString('vi-VN')} ₫
+    </div>
+
+    <div style="font-size:16px;">
+        <b>VAT (10%):</b> ${(total * 0.1).toLocaleString('vi-VN')} ₫
+    </div>
+
+    <div style="font-size:20px; font-weight:700; margin:15px 0;">
+        <b>Thành tiền:</b> ${(total * 1.1).toLocaleString('vi-VN')} ₫
+    </div>
+
+    <button class="popup-btn-save" onclick="confirmPayment(${bill.tableId})">
+        Xác nhận thanh toán
+    </button>
+
+    <button class="popup-btn-save" style="background:#8e24aa; margin-top:10px;"
+            onclick="printBill(${bill.tableId})">
+        In hóa đơn
+    </button>
+`;
+
+
+                showPopup(html);
+            });
+    }
+
+
+    function confirmPayment(tableId) {
+        fetch(`/tables/${tableId}/pay`, {method: "POST"})
+            .then(res => {
+                if (res.ok) {
+                    alert("Thanh toán thành công!");
+                    location.reload();
+                } else {
+                    alert("Lỗi thanh toán!");
+                }
+            });
+    }
+
+
+    function printBill() {
+        const popup = document.querySelector(".popup");
+
+        html2canvas(popup).then(canvas => {
+            // Tạo file ảnh PNG
+            const link = document.createElement("a");
+            link.href = canvas.toDataURL("image/png");
+            link.download = "hoa-don.png";
+            link.click();
+        });
+    }
+
+    function openViewDish(tableId) {
+        fetch(`/tables/${tableId}/bill`)
+            .then(async res => {
+                let data = await res.json();
+                if (!res.ok) {
+                    showPopup(`<h2>Lỗi</h2><p>${data.error}</p>`);
+                    throw new Error();
+                }
+                return data;
+            })
+            .then(bill => {
+
+                let items = bill.items.map((i, index) => ({
+                    index: index + 1,
+                    name: i.name || i.dishName || "Không rõ",
+                    quantity: Number(i.quantity) || 0,
+                    price: Number(i.price || i.unitPrice) || 0
+                }));
+
+                let rows = items.map(i => `
+                <tr>
+                    <td>${i.index}</td>
+                    <td>${i.name}</td>
+                    <td>${i.quantity}</td>
+                    <td>${i.price.toLocaleString('vi-VN')} ₫</td>
+                    <td>${(i.price * i.quantity).toLocaleString('vi-VN')} ₫</td>
+                </tr>
+            `).join("");
+
+                let html = `
+                <h2>Danh sách món đang gọi – ${bill.tableName}</h2>
+
+                <table class="detail-table" style="width:100%; border-collapse:collapse; margin-bottom:15px;">
+                    <tr style="background:#1976d2; color:white;">
+                        <th>STT</th>
+                        <th>Món ăn</th>
+                        <th>Số lượng</th>
+                        <th>Đơn giá</th>
+                        <th>Thành tiền</th>
+                    </tr>
+                    ${rows}
+                </table>
+
+                <div style="font-size:16px; margin-top:10px;">
+                    <b>Tổng tiền hiện tại:</b> ${Number(bill.total || 0).toLocaleString('vi-VN')} ₫
+                </div>
+            `;
+
+                showPopup(html);
+            });
+    }
+
+
+
 </script>
 
 </body>

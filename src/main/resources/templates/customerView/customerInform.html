@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chào mừng đến với nhà hàng</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f8f8f8; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #d4380d; }
+        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; }
+        button { background: #d4380d; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #ad2c0b; }
+        .old-customer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+        .error { color: red; text-align: center; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Chào mừng quý khách!</h2>
+    <h3 style="text-align:center; color:#d4380d;">
+        Bàn <span th:text="${table.tableName} ?: ${table.id}">?</span>
+    </h3>
+
+    <!-- Form tạo khách mới -->
+    <form th:action="@{/customer/order/create}" method="post">
+        <input type="hidden" name="tableId" th:value="${table.id}"/>
+
+        <label>Họ và tên <span style="color:red">*</span></label>
+        <input type="text" name="fullName" placeholder="Nguyễn Văn A" required/>
+
+        <label>Số điện thoại <span style="color:red">*</span></label>
+        <input type="text" name="phone" placeholder="0901234567" pattern="[0-9]{10,11}"
+               title="Vui lòng nhập đúng số điện thoại" required/>
+
+        <label>Số lượng khách</label>
+        <input type="number" name="guestCount" min="1" value="1" required/>
+
+        <button type="submit">Bắt đầu gọi món</button>
+    </form>
+
+    <div class="old-customer">
+        <h3 style="text-align:center; color:#555;">Bạn là khách cũ?</h3>
+        <form th:action="@{/customer/order/find-by-phone}" method="post">
+            <input type="hidden" name="tableId" th:value="${table.id}"/>
+            <input type="text" name="phone" placeholder="Nhập số điện thoại để kiểm tra" required/>
+            <button type="submit" style="background:#52c41a;">Kiểm tra & tiếp tục đơn cũ</button>
+        </form>
+    </div>
+
+    <!-- Hiển thị lỗi nếu có -->
+    <div th:if="${error}" class="error" th:text="${error}"></div>
+</div>
+
+</body>
+</html>

@@ -1,5 +1,6 @@
 package com.restaurant.management.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,11 +21,13 @@ public class OrderDetail {
 
     // Nhiều dòng chi tiết thuộc 1 đơn hàng
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
     // Nhiều dòng chi tiết thuộc 1 món
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "dish_id", nullable = false)
     private Dish dish;
 
