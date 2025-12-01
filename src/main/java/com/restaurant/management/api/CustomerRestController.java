@@ -47,6 +47,30 @@ public class CustomerRestController {
         return customerRepository.searchByKeyword(keyword);
     }
 
+
+// tạo tt kh
+    @PostMapping("/create")
+    public Map<String, Object> createCustomer(@RequestBody Customer customer) {
+
+        // Validate
+        if (customer.getFullName() == null || customer.getFullName().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tên khách hàng không được để trống");
+        }
+
+        if (customer.getPhone() == null || customer.getPhone().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Số điện thoại không được để trống");
+        }
+
+        Customer saved = customerRepository.save(customer);
+
+        // Trả về JSON response
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Tạo khách hàng thành công");
+        response.put("customerId", saved.getId());
+
+        return response;
+    }
+
     // Lấy thông tin theo ID
     @GetMapping("/{id}")
     public Customer findCustomer(@PathVariable Long id) {

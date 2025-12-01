@@ -33,4 +33,22 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByCustomerId(Long customerId);
 
+
+    @Query("""
+           SELECT COUNT(r)
+           FROM Reservation r
+           WHERE r.table.id = :tableId
+             AND r.status IN :statuses
+           """)
+    Long countActiveReservation(@Param("tableId") Long tableId,
+                                @Param("statuses") List<String> statuses);
+
+    @Modifying
+    @Query("""
+           DELETE FROM Reservation r
+           WHERE r.table.id = :tableId
+           """)
+    int deleteAllByTableId(@Param("tableId") Long tableId);
 }
+
+

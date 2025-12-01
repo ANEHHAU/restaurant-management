@@ -1,5 +1,6 @@
 package com.restaurant.management.repository;
 
+import com.restaurant.management.model.Order;
 import com.restaurant.management.model.OrderDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -16,5 +17,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Long> 
     void deleteByOrderIds(List<Long> orderIds);
 
     void deleteByOrderId(Long orderId);
+
+    List<OrderDetail> findByOrder(Order order);
 
 }
