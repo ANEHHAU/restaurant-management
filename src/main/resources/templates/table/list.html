@@ -1,8 +1,4 @@
-
-
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
 
 
 <!--            @todo thêm thông tin ở lịch đặt bàn để chuẩn bị ví dụ như ngày sinh nhật vv -->
@@ -409,7 +405,7 @@
                 let css = start < now ? "past" : "upcoming";
 
                 let statusHtml =
-                    r.status === "PENDING"   ? "<span class='st-pending'>Chờ xác nhận</span>" :
+                    r.status === "PENDING" ? "<span class='st-pending'>Chờ xác nhận</span>" :
                         r.status === "CONFIRMED" ? "<span class='st-confirmed'>Đã xác nhận</span>" :
                             r.status === "CANCELLED" ? "<span class='st-cancelled'>Đã hủy</span>" :
                                 "<span class='st-completed'>Thành công</span>";
@@ -454,7 +450,6 @@
     }
 
 
-
     // =========================
     //      POPUP EDIT BÀN
     // =========================
@@ -488,7 +483,7 @@
 
         fetch(`/tables/update/${id}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify(body)
         })
             .then(async res => {
@@ -504,8 +499,6 @@
             })
             .catch(err => alert("Lỗi kết nối server!"));
     }
-
-
 
 
     // =========================
@@ -554,10 +547,8 @@
     }
 
 
-
-
     function confirmDelete(id) {
-        fetch(`/tables/delete/${id}`, { method: "DELETE" })
+        fetch(`/tables/delete/${id}`, {method: "DELETE"})
             .then(async res => {
                 let text = await res.text(); // đọc message từ controller
                 if (res.ok) {
@@ -571,11 +562,10 @@
     }
 
 
-
     function getCurrentDateTime() {
         let d = new Date();
         let dd = String(d.getDate()).padStart(2, '0');
-        let mm = String(d.getMonth()+1).padStart(2, '0');
+        let mm = String(d.getMonth() + 1).padStart(2, '0');
         let yyyy = d.getFullYear();
 
         let hh = String(d.getHours()).padStart(2, '0');
@@ -671,9 +661,8 @@
     }
 
 
-
     function confirmPayment(tableId) {
-        fetch(`/tables/${tableId}/pay`, { method: "POST" })
+        fetch(`/tables/${tableId}/pay`, {method: "POST"})
             .then(res => {
                 if (res.ok) {
                     alert("Thanh toán thành công!");
@@ -696,6 +685,60 @@
             link.click();
         });
     }
+
+    function openViewDish(tableId) {
+        fetch(`/tables/${tableId}/bill`)
+            .then(async res => {
+                let data = await res.json();
+                if (!res.ok) {
+                    showPopup(`<h2>Lỗi</h2><p>${data.error}</p>`);
+                    throw new Error();
+                }
+                return data;
+            })
+            .then(bill => {
+
+                let items = bill.items.map((i, index) => ({
+                    index: index + 1,
+                    name: i.name || i.dishName || "Không rõ",
+                    quantity: Number(i.quantity) || 0,
+                    price: Number(i.price || i.unitPrice) || 0
+                }));
+
+                let rows = items.map(i => `
+                <tr>
+                    <td>${i.index}</td>
+                    <td>${i.name}</td>
+                    <td>${i.quantity}</td>
+                    <td>${i.price.toLocaleString('vi-VN')} ₫</td>
+                    <td>${(i.price * i.quantity).toLocaleString('vi-VN')} ₫</td>
+                </tr>
+            `).join("");
+
+                let html = `
+                <h2>Danh sách món đang gọi – ${bill.tableName}</h2>
+
+                <table class="detail-table" style="width:100%; border-collapse:collapse; margin-bottom:15px;">
+                    <tr style="background:#1976d2; color:white;">
+                        <th>STT</th>
+                        <th>Món ăn</th>
+                        <th>Số lượng</th>
+                        <th>Đơn giá</th>
+                        <th>Thành tiền</th>
+                    </tr>
+                    ${rows}
+                </table>
+
+                <div style="font-size:16px; margin-top:10px;">
+                    <b>Tổng tiền hiện tại:</b> ${Number(bill.total || 0).toLocaleString('vi-VN')} ₫
+                </div>
+            `;
+
+                showPopup(html);
+            });
+    }
+
+
 
 </script>
 
