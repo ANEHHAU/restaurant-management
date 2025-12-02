@@ -150,6 +150,38 @@
     .status-CANCELLED   {background:#f8d7da; color:#721c24;}
 
     .empty-message {text-align:center; padding:80px 20px; color:#888; font-size:1.2rem; background:#f9f9f9;}
+
+
+    /*action button*/
+    .action-btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        margin: 2px;
+        transition: 0.2s;
+    }
+
+    /* Nút sửa */
+    .btn-edit {
+        background: #b489ff;    /* tím nhạt */
+        color: white;
+    }
+    .btn-edit:hover {
+        background: #9d63ff;    /* tím đậm */
+    }
+
+    /* Nút xóa */
+    .btn-delete {
+        background: #ff6b6b;    /* đỏ */
+        color: white;
+    }
+    .btn-delete:hover {
+        background: #ff4a4a;    /* đỏ đậm */
+    }
+
 </style>
 
 <body>
@@ -168,6 +200,7 @@
             <th>Chi tiết món</th>
             <th>Tổng tiền</th>
             <th>Mã đặt món</th>
+            <th>Hành động</th>
         </tr>
 
         <tr th:if="${#lists.isEmpty(orders)}">
@@ -221,11 +254,42 @@
                      width="90" height="90"
                      style="cursor:pointer; border-radius:8px;"/>
             </td>
+            <td>
+                <button class="action-btn btn-edit" th:onclick="|openEditOrder(${o.id})|">
+                    Sửa
+                </button>
+                <button class="action-btn btn-delete" th:onclick="|openDeleteOrder(${o.id})|">
+                    Xóa
+                </button>
+            </td>
 
 
         </tr>
     </table>
 </div>
+
+
+<div id="editOrderModal" class="popup-overlay" style="display:none; z-index:99999;">
+    <div class="popup-box" style="width:600px; max-height:90vh; overflow-y:auto;">
+        <h3 style="margin-top:0; color:#1a4971;">Chỉnh sửa đơn hàng #<span id="editOrderId"></span></h3>
+        <div id="editOrderContent">Đang tải...</div>
+        <div style="margin-top:20px; text-align:right;">
+            <button class="qr-btn close" onclick="closeEditModal()">Hủy</button>
+            <button class="qr-btn save" onclick="saveOrderChanges()">Lưu thay đổi</button>
+        </div>
+    </div>
+</div>
+<div id="deleteOrderModal" class="popup-overlay" style="display:none;">
+    <div class="popup-box" style="width:420px;">
+        <h3 style="margin:0 0 10px; color:#b71c1c;">Xác nhận xóa đơn hàng</h3>
+
+        <div id="deleteInfo" style="line-height:1.6; margin-bottom:20px; color:#444;"></div>
+
+        <button class="qr-btn close" onclick="closeDeleteModal()">Hủy</button>
+        <button class="qr-btn save" onclick="confirmDeleteOrder()">Xóa ngay</button>
+    </div>
+</div>
+
 
 <div id="qrPopup" class="qr-modal">
     <div class="qr-popup-box">
@@ -292,35 +356,508 @@
 
 
 
-let currentQrSrc = "";
+    let currentQrSrc = "";
 
 
-function openQrPopup(imgElement) {
-const src = imgElement.src;
-const tableName = imgElement.dataset.tableName; // đọc từ data-table-name
+    function openQrPopup(imgElement) {
+        const src = imgElement.src;
+        const tableName = imgElement.dataset.tableName; // đọc từ data-table-name
 
-currentQrSrc = src;
+        currentQrSrc = src;
 
-document.getElementById("qrPopupImg").src = src;
-document.getElementById("qrTableName").innerText = tableName;
+        document.getElementById("qrPopupImg").src = src;
+        document.getElementById("qrTableName").innerText = tableName;
 
-document.getElementById("qrPopup").style.display = "flex";
-}
+        document.getElementById("qrPopup").style.display = "flex";
+    }
 
 
-function closeQrPopup() {
-document.getElementById("qrPopup").style.display = "none";
-}
+    function closeQrPopup() {
+        document.getElementById("qrPopup").style.display = "none";
+    }
 
-function downloadQr() {
-const link = document.createElement('a');
-link.href = currentQrSrc;
-link.download = "qr-table.png";
-document.body.appendChild(link);
-link.click();
-document.body.removeChild(link);
-}
+    function downloadQr() {
+        const link = document.createElement('a');
+        link.href = currentQrSrc;
+        link.download = "qr-table.png";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+
+
+
+
+
+
+
+
+
+    // cho edit
+
+
+
+    function openEditOrder(orderId) {
+        document.getElementById("editOrderId").textContent = orderId;
+
+        // LẤY DATA FULL: bàn, khách, món, status
+        fetch(`/orders/${orderId}/edit`)
+            .then(r => r.json())
+            .then(data => {
+
+                let html = "";
+
+                // ---------------------
+                // BÀN - label + dropdown chỉ chứa INACTIVE
+
+
+                // BÀN - Dropdown
+                html += `
+    <label><b>Bàn hiện tại: ${data.tableName}</b></label>
+    <select id="editTable"
+            style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:15px;">
+        <option value="${data.tableId}">${data.tableName}</option>
+`;
+                data.availableTables.forEach(t => {
+                    if (t.id !== data.tableId) {
+                        html += `<option value="${t.id}">${t.tableName}</option>`;
+                    }
+                });
+                html += `</select>`;
+
+
+
+                // ---------------------
+                // TRẠNG THÁI
+                // ---------------------
+                html += `
+                <label><b>Trạng thái hiện tại: ${data.status}</b></label>
+                <select id="editStatus" style="width:100%;padding:8px;border-radius:6px;border:1px solid #1976d2;margin-bottom:15px;">
+                    <option value="NEW" ${data.status === "NEW" ? "selected" : ""}>Chưa gọi món</option>
+                    <option value="IN_PROGRESS" ${data.status === "IN_PROGRESS" ? "selected" : ""}>Đã gọi món</option>
+                    <option value="COMPLETED" ${data.status === "COMPLETED" ? "selected" : ""}>Hoàn thành</option>
+                    <option value="CANCELLED" ${data.status === "CANCELLED" ? "selected" : ""}>Đã hủy</option>
+                </select>
+            `;
+
+
+                // ---------------------
+                // KHÁCH HÀNG
+                // ---------------------
+                if (data.customerPhone === "—" || data.customerPhone === null) {
+                    // KHÔNG có số → cho sửa 2 ô
+                    html += `
+                    <label><b>Tên khách hàng:</b></label>
+                    <input id="editCustomerName" value="${data.customerName}" style="width:100%;padding:8px;margin-bottom:10px;border-radius:6px;border:1px solid #ddd;">
+
+                    <label><b>Số điện thoại:</b></label>
+                    <input id="editCustomerPhone" value="" placeholder="Nhập số điện thoại..." style="width:100%;padding:8px;margin-bottom:15px;border-radius:6px;border:1px solid #ddd;">
+                `;
+                } else {
+                    // CÓ số → search dropdown
+                    html += `
+                    <label><b>Khách hàng: ${data.customerName} (${data.customerPhone})</b></label>
+                    <input id="editCustomerSearch"
+       oninput="searchCustomer(this.value)"
+       placeholder="Nhập tên hoặc số điện thoại..."
+       style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd;">
+
+<div id="customerResultBox"
+     style="border:1px solid #eee;margin-top:6px;border-radius:6px;display:none;"></div>
+
+<button id="resetCustomerBtn"
+        style="margin-top:8px;display:none;padding:6px 12px;border-radius:6px;cursor:pointer;"
+        onclick="resetCustomerSelect()">
+    Chọn lại
+</button>
+
+
+                    <div id="customerDropdown" style="border:1px solid #ddd;border-radius:6px;display:none;max-height:150px;overflow-y:auto;"></div>
+                `;
+                }
+
+
+                // ---------------------
+                // GHI CHÚ
+                // ---------------------
+                html += `
+                <label><b>Ghi chú cũ: ${data.note || "—"}</b></label>
+                <textarea id="editNote" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd;margin-bottom:20px;">${data.note || ""}</textarea>
+            `;
+
+
+                // ---------------------
+                // DANH SÁCH MÓN
+
+                html += `<h4>Danh sách món</h4>
+    <div id="editItemsList">`;
+
+                data.items.forEach(item => {
+                    html += `
+    <div class="item-row" style="display:flex;gap:10px;margin-bottom:8px;align-items:center;">
+        <input type="text" value="${item.dishName}" disabled style="flex:1;">
+        <input type="number" class="item-qty" data-dish="${item.dishId}" value="${item.quantity}" min="1" style="width:80px;">
+        <span class="remove-item"
+              onclick="this.parentElement.remove()"
+              style="cursor:pointer;color:red;font-weight:bold;">×</span>
+    </div>`;
+                });
+
+                html += `</div>`;
+
+
+
+
+                // NÚT THÊM MÓN
+                html += `
+                <button type="button" onclick="addNewItemRow()"
+                        style="padding:8px 14px;background:#43a047;color:white;border:none;border-radius:6px;margin-top:10px;">
+                    + Thêm món
+                </button>
+            `;
+
+                document.getElementById("editOrderContent").innerHTML = html;
+                document.getElementById("editOrderModal").style.display = "flex";
+            });
+    }
+
+
+    // function openEditOrder(orderId) {
+    //     document.getElementById("editOrderId").textContent = orderId;
+    //
+    //     fetch(`/orders/${orderId}/edit`)   // 👉 API mới: trả về thông tin order đầy đủ
+    //         .then(r => r.json())
+    //         .then(data => {
+    //
+    //             let html = `
+    //             <div class="form-row" style="display:flex; gap:15px; margin:15px 0;">
+    //                 <div style="flex:1;">
+    //                     <label><b>Bàn:</b></label>
+    //                     <input type="text" value="${data.tableName}" disabled
+    //                            style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+    //                 </div>
+    //                 <div style="flex:1;">
+    //                     <label><b>Trạng thái:</b></label>
+    //                     <select id="editStatus" style="width:100%; padding:8px; border:1px solid #1976d2; border-radius:6px;">
+    //                         <option value="NEW" ${data.status==='NEW'?'selected':''}>Chưa gọi món</option>
+    //                         <option value="IN_PROGRESS" ${data.status==='IN_PROGRESS'?'selected':''}>Đã gọi món</option>
+    //                         <option value="COMPLETED" ${data.status==='COMPLETED'?'selected':''}>Hoàn thành</option>
+    //                         <option value="CANCELLED" ${data.status==='CANCELLED'?'selected':''}>Đã hủy</option>
+    //                     </select>
+    //                 </div>
+    //             </div>
+    //
+    //             <div style="margin-bottom:15px;">
+    //                 <label><b>Khách hàng:</b></label>
+    //                 <input type="text" value="${data.customerName}" disabled
+    //                        style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+    //             </div>
+    //
+    //             <div style="margin-bottom:15px;">
+    //                 <label><b>Số điện thoại:</b></label>
+    //                 <input type="text" value="${data.customerPhone}" disabled
+    //                        style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+    //             </div>
+    //
+    //             <div style="margin-bottom:15px;">
+    //                 <label><b>Ghi chú:</b></label>
+    //                 <textarea id="editNote" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;" rows="3">${data.note || ''}</textarea>
+    //             </div>
+    //
+    //             <h4 style="margin-top:20px;">Danh sách món</h4>
+    //             <div id="editItemsList" style="max-height:300px; overflow-y:auto; border:1px solid #eee; padding:10px; border-radius:8px;">
+    //         `;
+    //
+    //             data.items.forEach(i => {
+    //                 html += `
+    //                 <div style="display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid #eee;">
+    //                     <input type="text" value="${i.dishName}" disabled style="flex:1;">
+    //                     <input type="number" min="1" class="item-qty" data-id="${i.id}" value="${i.quantity}" style="width:80px;">
+    //                 </div>
+    //             `;
+    //             });
+    //
+    //             html += `</div>`;
+    //
+    //             document.getElementById("editOrderContent").innerHTML = html;
+    //             document.getElementById("editOrderModal").style.display = "flex";
+    //         });
+    // }
+
+    let selectedCustomerId = null;
+
+    function searchCustomer(keyword) {
+        if (!keyword.trim()) {
+            document.getElementById("customerResultBox").style.display = "none";
+            return;
+        }
+
+        fetch(`/api/customers/search?keyword=${keyword}`)
+            .then(r => r.json())
+            .then(list => {
+                const box = document.getElementById("customerResultBox");
+                box.innerHTML = "";
+                box.style.display = "block";
+
+                list.forEach(c => {
+                    box.innerHTML += `
+                    <div onclick="chooseCustomer(${c.id}, '${c.fullName}', '${c.phone}')"
+                         style="padding:6px;cursor:pointer;">
+                        ${c.fullName} - ${c.phone}
+                    </div>`;
+                });
+            });
+    }
+    function chooseCustomer(id, name, phone) {
+        selectedCustomerId = id;
+
+        document.getElementById("editCustomerSearch").value = name + " - " + phone;
+        document.getElementById("editCustomerSearch").disabled = true;
+        document.getElementById("customerResultBox").style.display = "none";
+
+        document.getElementById("resetCustomerBtn").style.display = "inline-block";
+    }
+
+    function resetCustomerSelect() {
+        selectedCustomerId = null;
+
+        const input = document.getElementById("editCustomerSearch");
+        input.disabled = false;
+        input.value = "";
+        input.focus();
+
+        document.getElementById("resetCustomerBtn").style.display = "none";
+    }
+
+
+    function addNewItemRow() {
+        const list = document.getElementById("editItemsList");
+
+        list.insertAdjacentHTML("beforeend", `
+        <div class="item-row" style="display:flex;gap:10px;margin-bottom:8px;align-items:center;">
+            <select class="dish-select" onchange="lockDishSelect(this)"
+                    style="flex:1;padding:6px;border-radius:6px;border:1px solid #ddd;">
+                <option value="">-- Chọn món --</option>
+            </select>
+            <input type="number" class="item-qty-new" value="1" min="1" style="width:80px;">
+            <span onclick="this.parentElement.remove()" style="cursor:pointer;color:red;font-weight:bold;">×</span>
+        </div>
+    `);
+
+        fetch("/api/dishes")
+            .then(r => r.json())
+            .then(dishes => {
+                const select = list.lastElementChild.querySelector(".dish-select");
+                dishes.forEach(d => {
+                    select.innerHTML += `<option value="${d.id}">${d.dishName}</option>`;
+                });
+            });
+    }
+
+
+
+    function lockDishSelect(sel) {
+        const id = sel.value;
+        const name = sel.options[sel.selectedIndex].text;
+
+        if (!id) return;
+
+        sel.outerHTML = `
+        <input type="text" value="${name}" disabled style="flex:1;" data-dish="${id}">
+    `;
+    }
+
+
+
+
+
+
+    // Thêm món mới
+    // function addNewItemRow() {
+    //     const list = document.getElementById("editItemsList");
+    //     list.insertAdjacentHTML('beforeend', `
+    //     <div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #eee;">
+    //         <input type="text" placeholder="Tên món" style="flex:1;">
+    //         <input type="number" placeholder="SL" min="1" class="item-qty" style="width:80px;">
+    //         <span onclick="this.parentElement.remove()" style="color:red; cursor:pointer;">×</span>
+    //     </div>
+    // `);
+    // }
+
+
+    function saveOrderChanges() {
+        const orderId = document.getElementById("editOrderId").textContent;
+
+        // ===== CHECK KHÁCH =====
+        const hasPhoneMode = document.getElementById("editCustomerSearch") !== null;
+        if (hasPhoneMode && !selectedCustomerId) {
+            alert("Vui lòng chọn khách hàng từ danh sách!");
+            return;
+        }
+
+        // ===== LẤY MÓN =====
+        const items = [];
+
+        document.querySelectorAll("#editItemsList .item-row").forEach(row => {
+
+            const dishInput = row.querySelector("[data-dish]");
+            if (!dishInput) return;
+
+            const dishId = dishInput.dataset.dish;
+
+            let qty = null;
+
+            if (row.querySelector(".item-qty"))
+                qty = row.querySelector(".item-qty").value;
+
+            if (row.querySelector(".item-qty-new"))
+                qty = row.querySelector(".item-qty-new").value;
+
+            if (qty && parseInt(qty) > 0) {
+                items.push({
+                    dishId: dishId,
+                    quantity: parseInt(qty)
+                });
+            }
+        });
+
+
+        // ===== KHÁCH =====
+        let customerId = selectedCustomerId || null;
+        let customerName = null;
+        let customerPhone = null;
+
+        if (!customerId) {
+            customerName = document.getElementById("editCustomerName")?.value || null;
+            customerPhone = document.getElementById("editCustomerPhone")?.value || null;
+        }
+
+        const body = {
+            tableId: document.getElementById("editTable").value,
+            status: document.getElementById("editStatus").value,
+            note: document.getElementById("editNote").value,
+            items,
+            customerId,
+            customerName,
+            customerPhone
+        };
+
+        // ===== GỬI LÊN BACKEND =====
+        fetch(`/orders/${orderId}/update`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        }).then(async r => {
+            const msg = await r.text();
+            alert(msg);
+            if (r.ok) location.reload();
+        });
+    }
+
+
+
+
+    function closeEditModal() {
+        document.getElementById("editOrderModal").style.display = "none";
+    }
+
+
+    //  nhấn ra ngoài là nó đóng
+    // window.addEventListener("click", function(e) {
+    //     const modal = document.getElementById("editOrderModal");
+    //     if (e.target === modal) {
+    //         modal.style.display = "none";
+    //     }
+    // });
+
+
+
+    // Lưu thay đổi
+    // function saveOrderChanges() {
+    //     const orderId = document.getElementById("editOrderId").textContent;
+    //     const status = document.getElementById("editStatus").value;
+    //     const note = document.getElementById("editNote").value;
+    //
+    //     const items = [];
+    //     document.querySelectorAll("#editItemsList .item-qty").forEach(i => {
+    //         items.push({
+    //             id: i.dataset.id,
+    //             quantity: parseInt(i.value)
+    //         });
+    //     });
+    //
+    //     fetch(`/orders/${orderId}/update`, {
+    //         method: "PUT",
+    //         headers: { "Content-Type": "application/json" },
+    //         body: JSON.stringify({ status, note, items })
+    //     })
+    //         .then(r => r.ok ? (alert("Cập nhật thành công!"), location.reload())
+    //             : alert("Lỗi khi lưu!"));
+    // }
+    //
+    // // Đóng popup
+    // function closeEditModal() {
+    //     document.getElementById("editOrderModal").style.display = "none";
+    // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // xóa
+
+
+
+
+    let deleteOrderId = null;
+
+    function openDeleteOrder(orderId) {
+        deleteOrderId = orderId;
+
+        fetch(`/orders/${orderId}/info`)
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById("deleteInfo").innerHTML = `
+                <div><b>Bàn:</b> ${data.tableName}</div>
+                <div><b>Khách:</b> ${data.customerName}</div>
+                <div><b>SĐT:</b> ${data.customerPhone}</div>
+                <div><b>Ghi chú:</b> ${data.note || '—'}</div>
+            `;
+                document.getElementById("deleteOrderModal").style.display = "flex";
+            });
+    }
+
+    function closeDeleteModal() {
+        document.getElementById("deleteOrderModal").style.display = "none";
+    }
+
+    function confirmDeleteOrder() {
+        fetch(`/orders/${deleteOrderId}`, { method: "DELETE" })
+            .then(async r => {
+                const text = await r.text(); // Lấy message do controller trả về
+
+                if (r.ok) {
+                    alert(text);            // In ra thông báo thành công
+                    location.reload();
+                } else {
+                    alert(text);            // In ra thông báo lỗi từ controller
+                }
+            });
+    }
+
+
 </script>
+
 
 
 </body>

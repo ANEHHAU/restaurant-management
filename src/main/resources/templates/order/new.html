@@ -72,6 +72,12 @@
         <label>Số điện thoại (tùy chọn)</label>
         <input type="text" id="walkinPhone" placeholder="Nhập số điện thoại">
 
+        <label>Số khách thực tế *</label>
+<!--        <input type="number" id="guestCountWalkin" min="1" value="1" required>-->
+        <input type="number" id="guestCountWalkin" min="1" value="1" required oninput="filterTables()">
+
+
+
         <label>Bàn *</label>
         <select id="tableIdWalkin" required>
             <option value="">-- Chọn bàn trống --</option>
@@ -79,10 +85,8 @@
                     th:value="${table.id}"
                     th:text="'Bàn ' + ${table.tableName} + ' (' + ${table.seats} + ' ghế)'"></option>
         </select>
-
-        <label>Số khách thực tế *</label>
-        <input type="number" id="guestCountWalkin" min="1" value="1" required>
     </div>
+
 
     <!-- FORM KHÁCH ĐẶT TRƯỚC -->
     <div id="reservedForm" style="display:none;">
@@ -154,6 +158,39 @@
 </template>
 
 <script th:inline="javascript">
+
+    /*<![CDATA[*/
+
+    const allTables = [
+        /*[# th:each="t : ${tables}"]*/
+        {
+            id: [[${t.id}]],
+            name: 'Bàn ' + '[[${t.tableName}]]',
+            seats: [[${t.seats}]]
+        },
+        /*[/]*/
+    ];
+
+
+    function filterTables() {
+        const guestCount = Number(document.getElementById('guestCountWalkin').value);
+        const tableSelect = document.getElementById('tableIdWalkin');
+
+        // Xóa hết option cũ
+        tableSelect.innerHTML = `<option value="">-- Chọn bàn phù hợp --</option>`;
+
+        allTables.forEach(t => {
+            if (t.seats >= guestCount) {
+                tableSelect.innerHTML += `
+                <option value="${t.id}">
+                    ${t.name} (${t.seats} ghế)
+                </option>`;
+            }
+        });
+    }
+
+
+
     function formatDate(raw) {
         if (!raw) return "";
         const d = new Date(raw);
