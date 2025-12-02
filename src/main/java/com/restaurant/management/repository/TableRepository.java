@@ -8,8 +8,23 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface TableRepository extends JpaRepository<RestaurantTable, Long> {
+    @Query("""
+    SELECT t.id, SUM(od.unitPrice * od.quantity) 
+    FROM OrderDetail od
+    JOIN od.order o
+    JOIN o.table t
+    WHERE o.status = com.restaurant.management.model.OrderStatus.COMPLETED
+    GROUP BY t.id
+    """)
+    List<Object[]> getRevenueByTable();
 
 
+    @Query("""
+    SELECT t.id, t.tableName, t.seats, t.status
+    FROM RestaurantTable t
+    ORDER BY t.id
+    """)
+    List<Object[]> findAllTables();
 
 
     // Trong RestaurantTableRepository.java

@@ -98,6 +98,21 @@
 <body>
 <div th:replace="~{layout/header :: menu}"></div>
 <h1>Quản lý món ăn</h1>
+<div th:if="${popularDish != null}"
+     style="margin-bottom:20px; padding:15px; background:#eef7ff; border-radius:10px;">
+
+  <h3 style="margin:0; color:#0d6efd;">
+    ⭐ Món được gọi nhiều nhất:
+    <span th:text="${popularDish.dishName}"></span>
+  </h3>
+
+  <p style="margin:5px 0 0; color:#333;">
+    Số lần gọi hoàn thành:
+    <strong th:text="${popularCount}"></strong>
+  </p>
+
+</div>
+
 
 <div class="table-container">
   <table>

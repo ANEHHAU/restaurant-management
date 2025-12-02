@@ -1,6 +1,8 @@
 package com.restaurant.management.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,10 +25,16 @@ public class Order {
     private Long id;
 
     // Nhiều order thuộc 1 khách
-    @ManyToOne
+//    @ManyToOne
+//    @JoinColumn(name = "customer_id")
+//    @JsonIgnore
+//    private Customer customer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id")
-    @JsonIgnore
+    @JsonBackReference  // ← Thay @JsonIgnore bằng cái này
     private Customer customer;
+
 
     // Nhiều order thuộc 1 bàn
     @ManyToOne

@@ -20,4 +20,18 @@ public interface DishRepository extends JpaRepository<Dish, Long> {
 
     List<Dish> findByActiveTrueOrderByDishNameAsc();
 
+
+    @Query("""
+    SELECT d, SUM(od.quantity) AS totalQty
+    FROM OrderDetail od
+    JOIN od.dish d
+    JOIN od.order o
+    WHERE o.status = com.restaurant.management.model.OrderStatus.COMPLETED
+    GROUP BY d.id
+    ORDER BY totalQty DESC
+    """)
+    List<Object[]> findMostPopularDish();
+
+
+
 }

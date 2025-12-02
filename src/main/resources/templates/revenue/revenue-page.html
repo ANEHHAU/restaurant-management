@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout/header :: head"></head>
+
+<style>
+    body {
+        font-family:'Segoe UI', Tahoma, sans-serif;
+        background:#f5f7fa;
+        margin:0; padding:20px;
+    }
+
+    h1 {
+        text-align:center;
+        color:#1a4971;
+        margin-bottom:20px;
+        font-size:2.1rem;
+        font-weight:600;
+    }
+
+    .form-box {
+        width:95%; max-width:900px; margin:0 auto 25px auto;
+        background:white; padding:20px 25px; border-radius:12px;
+        box-shadow:0 8px 25px rgba(0,0,0,0.12);
+    }
+
+    label {font-weight:600; color:#1a4971;}
+    input {padding:8px; margin:0 10px;}
+
+    .submit-btn {
+        background:#1976d2; color:white; padding:8px 18px; border:none;
+        border-radius:8px; cursor:pointer; font-weight:600;
+    }
+
+    .table-container {
+        width:95%; max-width:1000px; margin:20px auto; background:white;
+        padding:20px; border-radius:12px; box-shadow:0 8px 25px rgba(0,0,0,0.12);
+    }
+
+    table {width:100%; border-collapse:collapse;}
+    th {
+        background:#1976d2; color:white;
+        padding:12px 5px; text-align:center;
+    }
+    td {
+        padding:12px 5px; text-align:center;
+        border-bottom:1px solid #eee;
+    }
+
+    .total-box {
+        width:95%; max-width:900px; margin:20px auto;
+        background:#eef7ff; padding:20px; border-radius:12px;
+        text-align:center; font-size:1.3rem; font-weight:600;
+        color:#0d6efd;
+    }
+</style>
+
+<body>
+<div th:replace="layout/header :: menu"></div>
+<h1>Thống kê doanh thu</h1>
+
+<div class="form-box">
+    <form action="/revenue" method="get">
+
+        <label>Từ:</label>
+        <input type="datetime-local" name="from" required>
+
+        <label>Đến:</label>
+        <input type="datetime-local" name="to" required>
+
+        <button class="submit-btn">Xem báo cáo</button>
+    </form>
+</div>
+
+<!-- Kết quả -->
+<div th:if="${orders != null}">
+
+    <div th:if="${#lists.isEmpty(orders)}" style="text-align:center; color:#777;">
+        Không có đơn hoàn thành trong khoảng thời gian đã chọn.
+    </div>
+
+    <div th:if="${not #lists.isEmpty(orders)}">
+
+        <!-- Tổng doanh thu -->
+        <div class="total-box">
+            Tổng doanh thu:
+            <span th:text="${#numbers.formatInteger(totalRevenue, 3, 'POINT')} + ' VNĐ'"></span>
+        </div>
+
+        <!-- Bảng đơn hàng -->
+        <div class="table-container">
+            <table>
+                <thead>
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Bàn</th>
+                    <th>Thời gian</th>
+                    <th>Tổng tiền</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="o : ${orders}">
+                    <td th:text="${o.id}"></td>
+                    <td th:text="${o.table.tableName}"></td>
+                    <td th:text="${#temporals.format(o.orderTime, 'HH:mm dd/MM/yyyy')}"></td>
+
+                    <td>
+                        <span th:text="${#numbers.formatInteger(o.totalAmount, 3, 'POINT')} + ' VNĐ'"></span>
+                    </td>
+
+                </tr>
+                </tbody>
+
+            </table>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

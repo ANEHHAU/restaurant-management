@@ -53,6 +53,10 @@ dependencies {
     implementation 'com.microsoft.sqlserver:mssql-jdbc:13.2.1.jre11'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
+
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
 }
 
 tasks.named('test') {

@@ -6,15 +6,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.restaurant.management.model.*;
-import com.restaurant.management.repository.CustomerRepository;
-import com.restaurant.management.repository.DishRepository;
-import com.restaurant.management.repository.OrderRepository;
-import com.restaurant.management.repository.TableRepository;
+import com.restaurant.management.repository.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +33,40 @@ public class OrderRestController {
 
     @Autowired
     private CustomerRepository customerRepository;
+    @Autowired
+    private ReservationRepository reservationRepository;
+
+
+
+
+    @GetMapping("/search")
+    public ResponseEntity<?> searchOrders(
+            @RequestParam("from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam("to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
+
+        List<Order> list = orderRepository.findOrdersBetween(from, to);
+
+        return ResponseEntity.ok(list.stream().map(o -> Map.of(
+                "id", o.getId(),
+                "tableName", o.getTable().getTableName(),
+                "guestCount", o.getGuestCount(),
+                "status", o.getStatus(),
+                "time", o.getOrderTime(),
+                "total", o.getOrderDetails().stream()
+                        .map(d -> d.getUnitPrice().multiply(BigDecimal.valueOf(d.getQuantity())))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                        .longValue()
+        )));
+    }
+
+
+
+
+
+
+
+
+
 
 
     @PutMapping("/{orderId}/update")
@@ -109,19 +141,83 @@ public class OrderRestController {
         // ================================
         order.setStatus(newStatus);
 
-        // ================================
-        // UPDATE CUSTOMER
-        // ================================
-        Long customerId = data.get("customerId") != null ? Long.valueOf(data.get("customerId").toString()) : null;
-        if (customerId != null) {
-            Customer c = customerRepository.findById(customerId)
-                    .orElseThrow(() -> new RuntimeException("Customer not found"));
-            order.setCustomer(c);
+
+
+// ================================
+// UPDATE RESERVATION IF EXISTS
+// ================================
+        if (order.getReservation() != null) {
+
+            Reservation reservation = order.getReservation();
+
+            if (newStatus == OrderStatus.COMPLETED) {
+                // Nếu đơn hoàn thành → reservation cũng hoàn thành
+                reservation.setStatus(ReservationStatus.COMPLETED);
+                System.out.println(">>> Reservation " + reservation.getId() + " → COMPLETED");
+            }
+
+            else if (newStatus == OrderStatus.IN_PROGRESS) {
+                // Nếu đơn bắt đầu xử lý → reservation chuyển IN_USE
+                reservation.setStatus(ReservationStatus.IN_USE);
+                System.out.println(">>> Reservation " + reservation.getId() + " → IN_USE");
+            }
+
+            // Lưu lại reservation
+            reservationRepository.save(reservation);
         }
 
-        // ================================
-        // UPDATE NOTE
-        // ================================
+
+
+
+
+
+
+
+        Long customerIdFromRequest = data.get("customerId") != null
+                ? Long.valueOf(data.get("customerId").toString())
+                : null;
+
+        String customerName = data.get("customerName") != null
+                ? data.get("customerName").toString().trim()
+                : null;
+
+        String customerPhone = data.get("customerPhone") != null
+                && !data.get("customerPhone").toString().trim().isEmpty()
+                ? data.get("customerPhone").toString().trim()
+                : null;
+
+        Customer customerToSet;
+
+        if (customerIdFromRequest != null) {
+            // Trường hợp chọn khách cũ từ dropdown
+            customerToSet = customerRepository.findById(customerIdFromRequest)
+                    .orElseThrow(() -> new RuntimeException("Customer not found: " + customerIdFromRequest));
+        } else {
+            // BẮT BUỘC tạo khách mới dù có/không có số điện thoại
+            String finalName = (customerName != null && !customerName.isEmpty())
+                    ? customerName
+                    : "Khách lẻ - " + LocalDateTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("HHmmss"));
+
+            Customer newCustomer = Customer.builder()
+                    .fullName(finalName)
+                    .phone(customerPhone) // có thể null
+                    .build();
+
+
+            customerToSet = customerRepository.saveAndFlush(newCustomer);
+
+            System.out.println(">>> NEW CUSTOMER SAVED: id = " + customerToSet.getId()
+                    + ", name = " + customerToSet.getFullName()
+                    + ", phone = " + customerToSet.getPhone());
+// ← BẮT BUỘC LƯU ĐỂ CÓ ID
+        }
+
+        order.setCustomer(customerToSet); // ← LUÔN CÓ .getId() hợp lệ
+
+// ================================
+// UPDATE NOTE
+// ================================
         order.setNote(data.get("note") != null ? data.get("note").toString() : null);
 
         // ================================
@@ -288,8 +384,24 @@ public class OrderRestController {
                 ? OrderStatus.IN_PROGRESS   // Có món -> bắt đầu chế biến
                 : OrderStatus.NEW;          // Không có món (hầu như không xảy ra)
 
+        Long customerId = data.get("customerId") != null
+                ? Long.valueOf(data.get("customerId").toString())
+                : null;
+
+        Customer customer = null;
+        if (customerId != null) {
+            customer = customerRepository.findById(customerId)
+                    .orElseThrow(() -> new RuntimeException("Customer not found"));
+        }
+
+
+
+
+
+
         Order order = Order.builder()
                 .table(table)
+                .customer(customer)   // <====== GÁN ĐÚNG VỊ TRÍ
                 .orderTime(LocalDateTime.now())
                 .status(orderStatus)
                 .guestCount(guestCount)
@@ -297,6 +409,7 @@ public class OrderRestController {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
+
 
         List<OrderDetail> details = new ArrayList<>();
         for (Map<String, Object> item : detailsJson) {
@@ -382,6 +495,7 @@ public class OrderRestController {
             res.put("customerName", "Khách vãng lai");
             res.put("customerPhone", "—");
         }
+        res.put("customerId", order.getCustomer() != null ? order.getCustomer().getId() : null);
 
         // GHI CHÚ
         res.put("note", order.getNote());

@@ -66,6 +66,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -193,38 +194,90 @@ public class CustomerViewController {
     /**
      * Tạo order mới: khách tự nhập tên + sđt + số lượng người
      */
+//    @PostMapping("/order/create")
+//    public String createCustomerOrder(
+//            @RequestParam Long tableId,
+//            @RequestParam String fullName,
+//            @RequestParam String phone,
+//            @RequestParam Integer guestCount,
+//            Model model) {
+//
+//        RestaurantTable table = tableRepository.findById(tableId)
+//                .orElse(null);
+//        if (table == null) {
+//            return "customerView/404";
+//        }
+//
+//        // Tìm khách hàng theo số điện thoại (tránh tạo trùng)
+//        Customer customer = customerRepository.findByPhone(phone)
+//                .orElseGet(() -> {
+//                    // Nếu chưa có → tạo mới
+//                    Customer newCustomer = Customer.builder()
+//                            .fullName(fullName)
+//                            .phone(phone)
+//                            .build();
+//                    return customerRepository.save(newCustomer);
+//                });
+//
+//        // Cập nhật tên nếu khác (trong trường hợp khách cũ đổi tên)
+//        if (!customer.getFullName().equals(fullName)) {
+//            customer.setFullName(fullName);
+//            customerRepository.save(customer);
+//        }
+//
+//        // Tạo order mới
+//        Order order = Order.builder()
+//                .table(table)
+//                .customer(customer)
+//                .guestCount(guestCount)
+//                .status(OrderStatus.NEW)
+//                .orderTime(LocalDateTime.now())
+//                .build();
+//
+//        orderRepository.save(order);
+//
+//        return "redirect:/customer/order/table/" + tableId;
+//    }
     @PostMapping("/order/create")
     public String createCustomerOrder(
             @RequestParam Long tableId,
             @RequestParam String fullName,
             @RequestParam String phone,
             @RequestParam Integer guestCount,
-            Model model) {
+            RedirectAttributes redirectAttributes) {   // Thay Model bằng RedirectAttributes (không dùng thì thôi)
 
+        // 1. Kiểm tra bàn
         RestaurantTable table = tableRepository.findById(tableId)
                 .orElse(null);
         if (table == null) {
             return "customerView/404";
         }
 
-        // Tìm khách hàng theo số điện thoại (tránh tạo trùng)
-        Customer customer = customerRepository.findByPhone(phone)
-                .orElseGet(() -> {
-                    // Nếu chưa có → tạo mới
-                    Customer newCustomer = Customer.builder()
-                            .fullName(fullName)
-                            .phone(phone)
-                            .build();
-                    return customerRepository.save(newCustomer);
-                });
+        // 2. Chuẩn hóa dữ liệu đầu vào
+        final String trimmedPhone = phone.trim();
+        final String trimmedName = fullName.trim();
 
-        // Cập nhật tên nếu khác (trong trường hợp khách cũ đổi tên)
-        if (!customer.getFullName().equals(fullName)) {
-            customer.setFullName(fullName);
-            customerRepository.save(customer);
+        // 3. Tìm khách hàng theo số điện thoại - DÙNG PHƯƠNG THỨC AN TOÀN
+        Customer customer = customerRepository.existsByPhone(trimmedPhone)
+                ? customerRepository.findFirstByPhone(trimmedPhone).orElse(null)
+                : null;
+
+        if (customer == null) {
+            // Nếu chưa tồn tại → tạo mới
+            customer = Customer.builder()
+                    .fullName(trimmedName)
+                    .phone(trimmedPhone)
+                    .build();
+            customer = customerRepository.save(customer);
+        } else {
+            // Nếu đã tồn tại → cập nhật tên (trong trường hợp khách đổi tên)
+            if (!customer.getFullName().equals(trimmedName)) {
+                customer.setFullName(trimmedName);
+                customerRepository.save(customer);
+            }
         }
 
-        // Tạo order mới
+        // 4. Tạo đơn hàng mới
         Order order = Order.builder()
                 .table(table)
                 .customer(customer)
@@ -235,6 +288,7 @@ public class CustomerViewController {
 
         orderRepository.save(order);
 
+        // 5. Chuyển hướng về trang đặt món của bàn đó
         return "redirect:/customer/order/table/" + tableId;
     }
 

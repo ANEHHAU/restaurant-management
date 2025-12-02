@@ -274,6 +274,42 @@
 <div th:replace="layout/header :: menu"></div>
 
 <h1>Quản lý đơn hàng</h1>
+<!-- BỘ LỌC THEO THỜI GIAN -->
+<div style="max-width:600px; margin:0 auto 25px; padding:18px;
+     background:#ffffff; border-radius:14px;
+     box-shadow:0 6px 20px rgba(0,0,0,0.08);">
+
+    <h3 style="text-align:center; color:#1a4971; margin-bottom:15px;">
+        Tìm đơn hàng theo thời gian
+    </h3>
+
+    <div style="display:flex; gap:12px;">
+
+        <div style="flex:1;">
+            <label>Từ:</label>
+            <input id="filterStart"
+                   type="datetime-local"
+                   style="width:100%; padding:8px;
+                          border-radius:8px; border:1px solid #c7c7ff;">
+        </div>
+
+        <div style="flex:1;">
+            <label>Đến:</label>
+            <input id="filterEnd"
+                   type="datetime-local"
+                   style="width:100%; padding:8px;
+                          border-radius:8px; border:1px solid #c7c7ff;">
+        </div>
+    </div>
+
+    <button onclick="filterOrdersByTime()"
+            style="margin-top:15px; width:100%;
+                   padding:10px; background:#6f8bff; color:white;
+                   border:none; border-radius:10px; font-size:15px;
+                   font-weight:600; cursor:pointer;">
+        Lọc
+    </button>
+</div>
 
 <div class="table-container">
     <table>
@@ -295,8 +331,11 @@
             </td>
         </tr>
 
-        <tr th:each="o, iter : ${orders}">
-            <td th:text="${iter.index + 1}"></td>
+        <tr class="order-row"
+            th:each="o, iter : ${orders}"
+            th:attr="data-time=${#temporals.format(o.orderTime, 'yyyy-MM-dd''T''HH:mm')}">
+
+        <td th:text="${iter.index + 1}"></td>
 
             <td>
                 <span th:if="${o.customer != null}" th:text="${o.customer.fullName}"></span>
@@ -481,8 +520,9 @@
         fetch(`/orders/${orderId}/edit`)
             .then(r => r.json())
             .then(data => {
-
+                selectedCustomerId = data.customerId;
                 let html = "";
+                // <<<<<< MUST HAVE
 
                 // ---------------------
                 // BÀN - label + dropdown chỉ chứa INACTIVE
@@ -856,7 +896,31 @@
             });
     }
 
+    function filterOrdersByTime() {
+        const start = document.getElementById("filterStart").value;
+        const end = document.getElementById("filterEnd").value;
 
+        if (!start || !end) {
+            alert("Vui lòng chọn đủ thời gian!");
+            return;
+        }
+
+        const startTime = new Date(start);
+        const endTime = new Date(end);
+
+        const rows = document.querySelectorAll(".order-row");
+
+        rows.forEach(row => {
+            const orderTimeStr = row.dataset.time;
+            const orderTime = new Date(orderTimeStr);
+
+            if (orderTime >= startTime && orderTime <= endTime) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
 </script>
 
 

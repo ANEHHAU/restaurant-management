@@ -284,6 +284,7 @@
             <th>Số điện thoại</th>
             <th>Địa chỉ</th>
             <th>Ngày tạo</th>
+            <th>Số đơn thành công </th>
             <th>Hành động</th>
         </tr>
 
@@ -296,28 +297,50 @@
         </tr>
 
         <!-- Có dữ liệu -->
+<!--        <tr th:each="c, iter : ${customers}">-->
+<!--            <td th:text="${iter.index + 1}"></td>-->
+<!--            <td th:text="${c.fullName}"></td>-->
+<!--            <td th:text="${c.phone != null ? c.phone : '—'}"></td>-->
+<!--            <td th:text="${c.address != null ? c.address : '—'}"></td>-->
+<!--            <td th:text="${#temporals.format(c.createdAt, 'dd/MM/yyyy HH:mm')}"></td>-->
+<!--            <td th:text="${c.get('completed')}"></td>-->
+
+
+<!--            <td>-->
+<!--                <button class="btn-edit"-->
+<!--                        th:onclick="'openEdit(' + ${c.id} + ')'">-->
+<!--                    Sửa-->
+<!--                </button>-->
+<!--                <button class="btn-delete"-->
+<!--                        th:onclick="'openDelete(' + ${c.id} + ')'">-->
+<!--                    Xóa-->
+<!--                </button>-->
+<!--                <button class="btn-detail"-->
+<!--                        th:onclick="'openDetail(' + ${c.id} + ')'">-->
+<!--                    Chi tiết-->
+<!--                </button>-->
+<!--            </td>-->
+<!--        </tr>-->
+
+
         <tr th:each="c, iter : ${customers}">
             <td th:text="${iter.index + 1}"></td>
-            <td th:text="${c.fullName}"></td>
-            <td th:text="${c.phone != null ? c.phone : '—'}"></td>
-            <td th:text="${c.address != null ? c.address : '—'}"></td>
-            <td th:text="${#temporals.format(c.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+
+            <td th:text="${c['fullName']}"></td>
+            <td th:text="${c['phone'] != null ? c['phone'] : '—'}"></td>
+            <td th:text="${c['address'] != null ? c['address'] : '—'}"></td>
+
+            <td th:text="${#temporals.format(c['createdAt'], 'dd/MM/yyyy HH:mm')}"></td>
+
+            <td th:text="${c['completed']}"></td>
 
             <td>
-                <button class="btn-edit"
-                        th:onclick="'openEdit(' + ${c.id} + ')'">
-                    Sửa
-                </button>
-                <button class="btn-delete"
-                        th:onclick="'openDelete(' + ${c.id} + ')'">
-                    Xóa
-                </button>
-                <button class="btn-detail"
-                        th:onclick="'openDetail(' + ${c.id} + ')'">
-                    Chi tiết
-                </button>
+                <button class="btn-edit" th:onclick="'openEdit(' + ${c['id']} + ')'">Sửa</button>
+                <button class="btn-delete" th:onclick="'openDelete(' + ${c['id']} + ')'">Xóa</button>
+                <button class="btn-detail" th:onclick="'openDetail(' + ${c['id']} + ')'">Chi tiết</button>
             </td>
         </tr>
+
 
     </table>
 

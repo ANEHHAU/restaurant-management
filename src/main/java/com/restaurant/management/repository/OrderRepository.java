@@ -9,13 +9,33 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByCustomerAndStatus(Customer customer, OrderStatus status);
 
+    @Query("""
+    SELECT o FROM Order o
+    WHERE o.status = com.restaurant.management.model.OrderStatus.COMPLETED
+      AND o.orderTime BETWEEN :from AND :to
+    ORDER BY o.orderTime DESC
+    """)
+    List<Order> findCompletedOrdersBetween(LocalDateTime from, LocalDateTime to);
+
+
     List<Order> findByCustomerId(Long customerId);
+
+
+    @Query("SELECT o FROM Order o WHERE o.table.id = :tableId AND o.status IN ('NEW','IN_PROGRESS')")
+    Optional<Order> findActiveOrderByTableId(@Param("tableId") Long tableId);
+
+
+
+    @Query("SELECT o FROM Order o WHERE o.orderTime BETWEEN :from AND :to ORDER BY o.orderTime DESC")
+    List<Order> findOrdersBetween(@Param("from") LocalDateTime from,
+                                  @Param("to") LocalDateTime to);
 
 
     @Modifying

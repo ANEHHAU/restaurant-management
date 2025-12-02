@@ -1,11 +1,9 @@
 package com.restaurant.management.api;
 
 import com.restaurant.management.model.*;
-import com.restaurant.management.repository.OrderDetailRepository;
-import com.restaurant.management.repository.OrderRepository;
-import com.restaurant.management.repository.ReservationRepository;
-import com.restaurant.management.repository.TableRepository;
+import com.restaurant.management.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -15,10 +13,7 @@ import org.springframework.web.servlet.ModelAndView;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/tables")
@@ -26,9 +21,74 @@ import java.util.Map;
 public class TableRestController {
 
     private final TableRepository tableRepository;
+    private final RestaurantTableRepository restaurantTableRepository;
     private final ReservationRepository reservationRepository;
     private final OrderRepository orderRepository;
     private final OrderDetailRepository orderDetailRepository;
+    private final CustomerRepository customerRepository;
+
+    @GetMapping("/list")
+    public String listTables(Model model) {
+
+        List<Object[]> rawTables = tableRepository.findAllTables();
+        List<Object[]> revenueList = tableRepository.getRevenueByTable();
+
+        Map<Long, Long> revenueMap = new HashMap<>();
+        for (Object[] row : revenueList) {
+            revenueMap.put((Long) row[0], (Long) row[1]);
+        }
+
+        List<Object[]> tables = new ArrayList<>();
+
+        for (Object[] t : rawTables) {
+            Long tableId = (Long) t[0];
+            Long revenue = revenueMap.getOrDefault(tableId, 0L);
+
+            // Tạo row mới: 0=id, 1=name, 2=seats, 3=status, 4=revenue
+            Object[] newRow = new Object[5];
+            newRow[0] = t[0];
+            newRow[1] = t[1];
+            newRow[2] = t[2];
+            newRow[3] = t[3];
+            newRow[4] = revenue;
+
+            tables.add(newRow);
+        }
+
+        model.addAttribute("tables", tables);
+        return "table/list";
+    }
+
+
+    @GetMapping("/available")
+    public ResponseEntity<List<RestaurantTable>> getAvailableTables(
+            @RequestParam("time")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime checkTime) {
+
+        if (checkTime == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        List<RestaurantTable> availableTables = restaurantTableRepository.findAvailableTablesAt(checkTime);
+        //                                                                    ↑ đúng tên method
+
+        return ResponseEntity.ok(availableTables);
+    }
+
+
+
+
+    @GetMapping("/{id}/active-order")
+    public ResponseEntity<?> getActiveOrder(@PathVariable Long id) {
+        Optional<Order> order = orderRepository.findActiveOrderByTableId(id);
+
+        if (order.isEmpty()) {
+            return ResponseEntity.ok(0); // không có khách
+        }
+
+        return ResponseEntity.ok(order.get().getGuestCount());
+    }
+
 
 
     // ============================
@@ -241,10 +301,7 @@ public class TableRestController {
         tableRepository.save(table);
         return ResponseEntity.ok("OK");
     }
-    @GetMapping("/list")
-    public List<Object[]> list() {
-        return tableRepository.findAllTableWithRevenue();
-    }
+
 
     @GetMapping("/{tableId}/schedule")
     public List<Map<String, Object>> getSchedule(@PathVariable Long tableId) {

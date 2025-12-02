@@ -9,7 +9,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -43,11 +45,38 @@ public class MainController {
     }
 
     // Quản lý khách hàng: hiện full danh sách KH
+//    @GetMapping("/customers")
+//    public String listCustomers(Model model) {
+//        model.addAttribute("customers", customerRepository.findAll());
+//        return "customer/list"; // templates/customer/list.html
+//    }
+
+    // Quản lý khách hàng: hiện full danh sách KH có sl mua  giảm dần
     @GetMapping("/customers")
     public String listCustomers(Model model) {
-        model.addAttribute("customers", customerRepository.findAll());
-        return "customer/list"; // templates/customer/list.html
+        List<Map<String, Object>> customers = customerRepository.findAllWithCompletedOrders()
+                .stream()
+                .map(r -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("id", r[0]);
+                    m.put("fullName", r[1]);
+                    m.put("phone", r[2]);       // null OK
+                    m.put("address", r[3]);     // null OK
+                    m.put("createdAt", r[4]);
+                    m.put("completed", r[5]);   // null OK
+                    return m;
+                })
+                .toList();
+
+
+        model.addAttribute("customers", customers);
+        return "customer/list";
     }
+
+
+
+
+
 
     // Quản lý đơn hàng: hiện full danh sách đơn
     @GetMapping("/orders")

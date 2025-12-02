@@ -1,10 +1,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 
-<!--            @todo thêm thông tin ở lịch đặt bàn để chuẩn bị ví dụ như ngày sinh nhật vv -->
-<!-- @todo nút check out chức năng tạo hóa đơn chi tiết món xác nhận thanh toán chuyển trạng thái rese
- @todo nếu có vì lỡ khách trực tiếp thì ko có rese chuyển trạng thái bàn sang chưa hoạt động-->
-
 
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
@@ -354,6 +350,30 @@
         from { transform:scale(0.5); opacity:0; }
         to { transform:scale(1); opacity:1; }
     }
+
+    .sort-btn {
+        border: 1px solid #ddd;
+        background: white;
+        color: #333;
+        padding: 4px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 700;
+        margin-left: 8px;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .sort-btn:hover {
+        background: #f0f0f0;
+        border-color: #bbb;
+        transform: translateY(-2px);
+    }
+
+    .sort-btn:active {
+        transform: translateY(0);
+    }
+
 </style>
 
 <body>
@@ -367,9 +387,17 @@
         <tr>
             <th>STT</th>
             <th>Tên bàn</th>
-            <th>Số ghế</th>
+            <th>Số ghế</th>ư
+            <th>Số khách</th>
             <th>Trạng thái hiện tại</th>
-            <th>Tổng doanh thu</th>
+            <th style="text-align:center; position:relative;">
+                Tổng doanh thu
+                <button onclick="sortByRevenue()"
+                        class="sort-btn">
+                    ↓
+                </button>
+            </th>
+
             <th>Lịch đặt bàn</th>
             <th>Hành động</th>
             <th>Mã đặt món</th>
@@ -379,6 +407,12 @@
             <td th:text="${iter.index + 1}"></td>
             <td th:text="${t[1]}"></td>
             <td th:text="${t[2]}"></td>
+
+            <td th:attr="id=${'guestCount-' + t[0]}">
+                <span>Đang tải...</span>
+            </td>
+
+
 
             <td>
                 <span th:class="${#strings.equalsIgnoreCase(t[3],'ACTIVE') ? 'status-active' : 'status-inactive'}"
@@ -391,7 +425,9 @@
                 </button>
             </td>
 
-            <td th:text="${#numbers.formatDecimal(t[4], 0, 'COMMA', 0, 'POINT')} + ' ₫'"></td>
+            <td th:text="${#numbers.formatInteger(t[4], 3, 'POINT')} + ' ₫'"></td>
+
+
 
             <td>
                 <button class="btn-view-schedule"
@@ -875,6 +911,35 @@
             });
     }
 
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[id^='guestCount-']").forEach(cell => {
+        let tableId = cell.id.replace("guestCount-", "");
+
+        fetch(`/tables/${tableId}/active-order`)   // NHỚ có dấu /
+            .then(res => res.json())
+            .then(count => {
+                cell.innerHTML = `<b>${count}</b>`;
+            })
+            .catch(err => {
+                console.error(err);
+                cell.innerHTML = `<span style="color:red;">Lỗi</span>`;
+            });
+    });
+});
+
+
+function sortByRevenue() {
+    const table = document.querySelector("table");
+    let rows = Array.from(table.querySelectorAll("tr:nth-child(n+2)"));
+
+    rows.sort((a, b) => {
+        let revA = Number(a.children[5].innerText.replace(/[^0-9]/g, ""));
+        let revB = Number(b.children[5].innerText.replace(/[^0-9]/g, ""));
+        return revB - revA;
+    });
+
+    rows.forEach(r => table.appendChild(r));
+}
 
 
 </script>
