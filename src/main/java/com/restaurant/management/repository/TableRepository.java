@@ -2,10 +2,20 @@ package com.restaurant.management.repository;
 
 import com.restaurant.management.model.RestaurantTable;
 import java.util.List;
+
+import com.restaurant.management.model.TableStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface TableRepository extends JpaRepository<RestaurantTable, Long> {
+
+
+
+
+    // Trong RestaurantTableRepository.java
+    List<RestaurantTable> findBySeatsGreaterThanEqualAndStatus(int seats, TableStatus status);
+
+
 
     @Query("SELECT t FROM RestaurantTable t WHERE t.status = 'INACTIVE'")
     List<RestaurantTable> findAllInActiveTables();

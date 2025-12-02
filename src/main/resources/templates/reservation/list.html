@@ -302,45 +302,146 @@
 
 
             <td>
+<!--                <div class="action-box">-->
+
+<!--                    <div th:if="${r.status.name() == 'PENDING'}">-->
+<!--                        <button class="btn-confirm" th:onclick="'openConfirm(' + ${r.id} + ')'">Xác nhận</button>-->
+<!--                        <button class="btn-checkin" th:onclick="'openCancel(' + ${r.id} + ')'">Hủy đặt</button>-->
+<!--                    </div>-->
+
+
+<!--                    &lt;!&ndash; Ô 1: Action chính &ndash;&gt;-->
+<!--&lt;!&ndash;                    <th:block th:switch="${r.status.name()}">&ndash;&gt;-->
+
+<!--&lt;!&ndash;                        <button th:case="'PENDING'"     class="btn-confirm" th:onclick="'openConfirm(' + ${r.id} + ')'">Xác nhận</button>&ndash;&gt;-->
+<!--&lt;!&ndash;                        <button th:case="'PENDING'"     class="btn-checkin" th:onclick="'openCancel(' + ${r.id} + ')'">Xác nhận</button>&ndash;&gt;-->
+<!--&lt;!&ndash;&lt;!&ndash;                        <button th:case="'CONFIRMED'"   class="btn-checkin" th:onclick="'openCheckIn(' + ${r.id} + ')'">Check-in</button>&ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;&lt;!&ndash;                        <button th:case="'IN_USE'"      class="btn-detail"  th:onclick="'openOrderItems(' + ${r.id} + ')'">Xem món</button>&ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;&lt;!&ndash;                        <button th:case="'COMPLETED'"   class="btn-detail"  th:onclick="'openInvoice(' + ${r.id} + ')'">Hóa đơn</button>&ndash;&gt;&ndash;&gt;-->
+
+<!--&lt;!&ndash;                        &lt;!&ndash; CANCELLED / NO_SHOW / fallback &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;                        <button th:case="'CANCELLED'" class="btn-none">—</button>&ndash;&gt;-->
+<!--&lt;!&ndash;                        <button th:case="'NO_SHOW'"   class="btn-none">—</button>&ndash;&gt;-->
+<!--&lt;!&ndash;                        <button th:case="*"           class="btn-none">—</button>&ndash;&gt;-->
+
+<!--&lt;!&ndash;                    </th:block>&ndash;&gt;-->
+
+<!--&lt;!&ndash;                    &lt;!&ndash; Ô 2: Sửa &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;                    <button th:if="${r.status.name() != 'CANCELLED' and r.status.name() != 'NO_SHOW'}"&ndash;&gt;-->
+<!--&lt;!&ndash;                            class="btn-edit" th:onclick="'openEdit(' + ${r.id} + ')'">&ndash;&gt;-->
+<!--&lt;!&ndash;                        Sửa&ndash;&gt;-->
+<!--&lt;!&ndash;                    </button>&ndash;&gt;-->
+
+<!--&lt;!&ndash;                    <button th:if="${r.status.name() == 'CANCELLED' or r.status.name() == 'NO_SHOW'}"&ndash;&gt;-->
+<!--&lt;!&ndash;                            class="btn-none">—</button>&ndash;&gt;-->
+
+
+<!--&lt;!&ndash;                    &lt;!&ndash; Ô 3: Xóa &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;                    <button class="btn-delete" th:onclick="'openDelete(' + ${r.id} + ')'">&ndash;&gt;-->
+<!--&lt;!&ndash;                        Xóa&ndash;&gt;-->
+<!--&lt;!&ndash;                    </button>&ndash;&gt;-->
+
+<!--                </div>-->
+
                 <div class="action-box">
 
-                    <!-- Ô 1: Action chính -->
-                    <th:block th:switch="${r.status.name()}">
+                    <th:block th:if="${r.status.name() == 'PENDING'}">
+                        <button class="btn-confirm"
+                                th:onclick="'openConfirm(' + ${r.id} + ')'">
+                            Xác nhận
+                        </button>
 
-                        <button th:case="'PENDING'"     class="btn-confirm" th:onclick="'openConfirm(' + ${r.id} + ')'">Xác nhận</button>
-                        <button th:case="'CONFIRMED'"   class="btn-checkin" th:onclick="'openCheckIn(' + ${r.id} + ')'">Check-in</button>
-                        <button th:case="'IN_USE'"      class="btn-detail"  th:onclick="'openOrderItems(' + ${r.id} + ')'">Xem món</button>
-                        <button th:case="'COMPLETED'"   class="btn-detail"  th:onclick="'openInvoice(' + ${r.id} + ')'">Hóa đơn</button>
-
-                        <!-- CANCELLED / NO_SHOW / fallback -->
-                        <button th:case="'CANCELLED'" class="btn-none">—</button>
-                        <button th:case="'NO_SHOW'"   class="btn-none">—</button>
-                        <button th:case="*"           class="btn-none">—</button>
-
+                        <button class="btn-checkin"
+                                th:onclick="'openCancel(' + ${r.id} + ')'">
+                            Hủy đặt
+                        </button>
                     </th:block>
 
-                    <!-- Ô 2: Sửa -->
-                    <button th:if="${r.status.name() != 'CANCELLED' and r.status.name() != 'NO_SHOW'}"
-                            class="btn-edit" th:onclick="'openEdit(' + ${r.id} + ')'">
-                        Sửa
-                    </button>
-
-                    <button th:if="${r.status.name() == 'CANCELLED' or r.status.name() == 'NO_SHOW'}"
-                            class="btn-none">—</button>
-
-
-                    <!-- Ô 3: Xóa -->
-                    <button class="btn-delete" th:onclick="'openDelete(' + ${r.id} + ')'">
-                        Xóa
-                    </button>
-
                 </div>
+
+
+
+
             </td>
 
         </tr>
         </tbody>
     </table>
 </div>
+<script>
+    async function openConfirm(reservationId) {
+        if (!confirm("Xác nhận đặt bàn này cho khách?")) {
+            return;
+        }
 
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = "Đang xử lý...";
+
+        try {
+            const response = await fetch(`/reservation/confirm/${reservationId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            });
+
+            const result = await response.text();
+
+            if (result === "SUCCESS") {
+                showToast("Xác nhận đặt bàn thành công!", "success");
+                refreshPage();
+                // Thay nút "Xác nhận" bằng chữ "Đã xác nhận"
+                btn.closest("td").innerHTML = '<span style="color:green;font-weight:bold;">Đã xác nhận</span>';
+            } else if (result === "ALREADY_CONFIRMED") {
+                showToast("Đã được xác nhận trước đó", "info");
+                btn.closest("td").innerHTML = '<span style="color:green;font-weight:bold;">Đã xác nhận</span>';
+            } else {
+                showToast("Lỗi: " + result, "error");
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        } catch (err) {
+            showToast("Lỗi kết nối server", "error");
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    async function openCancel(reservationId) {
+        if (!confirm("Bạn có chắc chắn muốn HỦY đặt bàn này?")) return;
+
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = "Đang hủy...";
+
+        try {
+            const res = await fetch(`/reservation/cancel/${reservationId}`, { method: "POST" });
+            const msg = await res.text();
+
+            if (msg === "SUCCESS" || msg === "ALREADY_CANCELLED") {
+                showToast("Đã hủy đặt bàn", "success");
+                refreshPage();
+                btn.closest("td").innerHTML = '<span style="color:red;">Đã hủy</span>';
+            } else {
+                showToast("Lỗi: " + msg, "error");
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        } catch (e) {
+            showToast("Lỗi kết nối", "error");
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+
+    function refreshPage(delay = 1000) {
+        setTimeout(() => {
+            location.reload();
+        }, delay);
+    }
+
+</script>
 </body>
 </html>

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{customerView/header :: head}">
+    <!-- Header (title + CSS) sẽ được thay thế từ file header.html -->
+</head>
+
+<body>
+<!-- Chèn menu chung -->
+<div th:replace="~{customerView/header :: menu}"></div>
+
+<!-- Nội dung riêng của trang chủ -->
+<div style="padding: 40px; text-align: center;">
+    <h1>Chào mừng đến với Nhà hàng Delicious!</h1>
+    <p>Vui lòng chọn chức năng ở menu trên</p>
+</div>
+</body>
+</html>

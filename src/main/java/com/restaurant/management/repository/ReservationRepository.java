@@ -12,6 +12,28 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
+
+
+
+
+
+    // Trong ReservationRepository.java
+    @Query("SELECT DISTINCT r.table.id FROM Reservation r " +
+            "WHERE r.reservationStart < :to AND r.reservationEnd > :from " +
+            "AND r.status NOT IN ('CANCELLED', 'COMPLETED', 'NO_SHOW')")
+    List<Long> findBookedTableIdsInRange(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END " +
+            "FROM Reservation r WHERE r.table = :table " +
+            "AND r.reservationStart < :end AND r.reservationEnd > :start")
+    boolean existsByTableAndTimeOverlap(@Param("table") RestaurantTable table,
+                                        @Param("start") LocalDateTime start,
+                                        @Param("end") LocalDateTime end);
+
+
+
+
+
     @Query("""
     SELECT r FROM Reservation r
     WHERE 

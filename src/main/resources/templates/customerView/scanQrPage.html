@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{customerView/header :: head}">
+    <title>Quét mã QR - Gọi món</title>
+
+
+</head>
+
+<body>
+<div th:replace="~{customerView/header :: menu}"></div>
+
+<div class="qr-container">
+    <h1>Gọi Món Bằng Mã QR</h1>
+    <p style="color:#555;margin-bottom:25px;">
+        Hướng camera • Tải ảnh • Hoặc nhấn <kbd style="background:#333;color:#fff;padding:4px 8px;border-radius:4px;font-family:consolas;">Ctrl + V</kbd> để dán nhanh
+    </p>
+
+    <div class="qr-tabs">
+        <button class="tab-btn active" data-tab="camera">Camera</button>
+        <button class="tab-btn" data-tab="upload">Tải / Dán ảnh (Ctrl+V)</button>
+    </div>
+
+    <!-- Camera -->
+    <div id="camera" class="tab-content" style="display:block;">
+        <div id="qr-reader" style="width:520px;max-width:92vw;margin:30px auto;border:3px solid #1976d2;border-radius:16px;overflow:hidden;"></div>
+        <div id="qr-result" class="result-box"></div>
+    </div>
+
+    <!-- Upload & Paste -->
+    <div id="upload" class="tab-content" style="display:none;">
+        <div id="drop-zone" class="upload-area">
+            <p style="font-size:22px;margin:10px 0 5px;">Click để chọn ảnh QR</p>
+            <p style="font-size:18px;color:#1976d2;font-weight:600;">Hoặc kéo thả • Ctrl + V để dán</p>
+        </div>
+        <div id="qr-result-upload" class="result-box"></div>
+        <input type="file" id="file-input" accept="image/*" style="display:none;">
+        <div id="qr-reader-file" style="display:none;"></div>
+    </div>
+</div>
+<style>
+    .qr-container { max-width:800px; margin:40px auto; padding:30px; background:#fff; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.1); text-align:center; }
+    .qr-tabs { display:inline-flex; border-radius:12px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,0.15); margin-bottom:20px; }
+    .tab-btn { padding:15px 35px; border:none; background:#e0e0e0; font-weight:600; cursor:pointer; transition:0.3s; }
+    .tab-btn.active, .tab-btn:hover { background:#1976d2; color:white; }
+    .upload-area { margin:40px auto; padding:70px 20px; border:4px dashed #1976d2; border-radius:20px; background:#f8fbff; cursor:pointer; transition:0.3s; }
+    .upload-area:hover, .upload-area.dragover { background:#e3f2fd; border-color:#1565c0; }
+    .result-box { margin:25px auto; padding:20px; border-radius:12px; font-size:18px; min-height:50px; max-width:600px; }
+    .success { background:#e8f5e8 !important; color:#2e7d32; border:2px solid #4caf50; }
+    .error { background:#ffebee !important; color:#c62828; border:2px solid #e57373; }
+</style>
+<!-- Thư viện -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<script>
+    // ===== XỬ LÝ KẾT QUẢ CHUNG =====
+    function handleSuccess(text) {
+        let tableId = null;
+
+        // Dạng URL: .../table/5
+        const match = text.match(/\/table\/(\d+)/);
+        if (match) {
+            tableId = match[1];
+        } else if (/^\d+$/.test(text.trim())) {
+            // Dạng chỉ có số: "5"
+            tableId = text.trim();
+        }
+
+        if (tableId) {
+            const msg = `Nhận diện bàn <strong>${tableId}</strong> thành công! Đang chuyển...`;
+            const html = `<div class="result-box success">${msg}</div>`;
+            const qrResult = document.getElementById('qr-result');
+            const qrResultUpload = document.getElementById('qr-result-upload');
+            if (qrResult) qrResult.innerHTML = html;
+            if (qrResultUpload) qrResultUpload.innerHTML = html;
+
+            setTimeout(() => location.href = `/customer/order/table/${tableId}`, 1200);
+        } else {
+            showError("Mã QR không hợp lệ!");
+        }
+    }
+
+    function showError(msg) {
+        const html = `<div class="result-box error">${msg}</div>`;
+        const qrResult = document.getElementById('qr-result');
+        const qrResultUpload = document.getElementById('qr-result-upload');
+        if (qrResult) qrResult.innerHTML = html;
+        if (qrResultUpload) qrResultUpload.innerHTML = html;
+    }
+
+    window.addEventListener('DOMContentLoaded', function () {
+        let cameraScanner = null;
+
+        const dropZone   = document.getElementById('drop-zone');
+        const fileInput  = document.getElementById('file-input');
+        const cameraTab  = document.querySelector('[data-tab="camera"]');
+        const uploadTab  = document.querySelector('[data-tab="upload"]');
+
+        // ====== CAMERA ======
+        function startCamera() {
+            if (cameraScanner) return;
+            if (!document.getElementById('qr-reader')) return;
+
+            cameraScanner = new Html5Qrcode("qr-reader");
+            cameraScanner
+                .start(
+                    { facingMode: "environment" },
+                    { fps: 15, qrbox: { width: 280, height: 280 } },
+                    function (decodedText) {
+                        handleSuccess(decodedText);
+                        stopCamera();
+                    },
+                    function () { /* ignore scan failure */ }
+                )
+                .catch(err => {
+                    showError("Không mở được camera: " + err);
+                });
+        }
+
+        function stopCamera() {
+            if (!cameraScanner) return;
+            cameraScanner
+                .stop()
+                .then(() => cameraScanner.clear())
+                .catch(() => {})
+                .finally(() => { cameraScanner = null; });
+        }
+
+        // ====== QUÉT ẢNH (UPLOAD / DRAG & DROP / CTRL+V) BẰNG html5-qrcode ======
+        function processImageFile(file) {
+            if (!file || !file.type || !file.type.startsWith('image/')) {
+                showError("File không phải là ảnh!");
+                return;
+            }
+
+            const html5QrCode = new Html5Qrcode("qr-reader-file"); // div ẩn
+
+            html5QrCode
+                .scanFile(file, false) // false = không cần hiển thị ảnh
+                .then(decodedText => {
+                    handleSuccess(decodedText);
+                    html5QrCode.clear();
+                })
+                .catch(err => {
+                    console.error(err);
+                    showError("Không tìm thấy mã QR trong ảnh. Hãy thử ảnh rõ hơn!");
+                    html5QrCode.clear();
+                });
+        }
+
+        // ====== CLICK CHỌN FILE ======
+        if (dropZone && fileInput) {
+            dropZone.addEventListener('click', function () {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function (e) {
+                const file = e.target.files && e.target.files[0];
+                if (file) {
+                    processImageFile(file);
+                }
+            });
+
+            // ====== DRAG & DROP ======
+            ['dragenter', 'dragover'].forEach(function (ev) {
+                dropZone.addEventListener(ev, function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.add('dragover');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(function (ev) {
+                dropZone.addEventListener(ev, function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.remove('dragover');
+                });
+            });
+
+            dropZone.addEventListener('drop', function (e) {
+                const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+                if (file) {
+                    processImageFile(file);
+                }
+            });
+        }
+
+        // ====== CTRL + V (PASTE ẢNH) ======
+        document.addEventListener('paste', function (e) {
+            const clipboard = e.clipboardData || window.clipboardData;
+            if (!clipboard) return;
+
+            let file = null;
+
+            if (clipboard.files && clipboard.files.length > 0) {
+                file = clipboard.files[0];
+            } else if (clipboard.items && clipboard.items.length > 0) {
+                for (let i = 0; i < clipboard.items.length; i++) {
+                    if (clipboard.items[i].type.indexOf('image') !== -1) {
+                        file = clipboard.items[i].getAsFile();
+                        break;
+                    }
+                }
+            }
+
+            if (file) {
+                if (uploadTab) uploadTab.click(); // chuyển sang tab upload
+                processImageFile(file);
+            }
+        });
+
+        // ====== TAB CAMERA / UPLOAD ======
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        tabButtons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const target = this.dataset.tab;
+
+                document.querySelectorAll('.tab-content').forEach(function (tab) {
+                    tab.style.display = 'none';
+                });
+                tabButtons.forEach(function (b) {
+                    b.classList.remove('active');
+                });
+
+                const content = document.getElementById(target);
+                if (content) {
+                    content.style.display = 'block';
+                }
+                this.classList.add('active');
+
+                if (target === 'camera') {
+                    startCamera();
+                } else {
+                    stopCamera();
+                }
+            });
+        });
+
+        // ====== KHỞI ĐỘNG MẶC ĐỊNH: CAMERA ======
+        startCamera();
+    });
+</script>
+
+</body>
+</html>

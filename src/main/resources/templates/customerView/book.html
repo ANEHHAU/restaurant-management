@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{customerView/header :: head}">
+  <title>Đặt bàn • Nhà hàng Delicious</title>
+</head>
+
+<style>
+  body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f7fa;margin:0;padding:20px;color:#333;}
+  h1{text-align:center;color:#1a4971;margin:70px 0 10px;font-size:2.4rem;font-weight:700;}
+  .page-desc{text-align:center;color:#666;margin-bottom:40px;font-size:1.1rem;}
+  .booking-container{max-width:950px;margin:0 auto;background:white;border-radius:16px;
+    box-shadow:0 10px 35px rgba(0,0,0,0.12);overflow:hidden;}
+  /* ĐÃ SỬA DÒNG NÀY – THÊM # VÀ DẤU {} */
+  .booking-header{background:#1976d2;color:white;padding:20px 30px;display:flex;
+    justify-content:space-between;align-items:center;position:relative;}
+  .booking-header h2{margin:0;font-size:1.8rem;font-weight:600;}
+  .mode-switch{position:absolute;right:30px;top:50%;transform:translateY(-50%);}
+  .mode-btn{background:transparent;color:white;border:2px solid rgba(255,255,255,0.5);
+    padding:8px 16px;border-radius:8px;font-weight:600;cursor:pointer;transition:0.3s;font-size:14px;}
+  .mode-btn.active{background:white;color:#1976d2;}
+  .mode-btn:hover{opacity:0.9;}
+  .section{padding:30px 40px;border-bottom:1px solid #eee;}
+  .section:last-child{border-bottom:none;}
+  .section.disabled{opacity:0.5;pointer-events:none;background:#f9f9f9;}
+  .section h3{color:#1976d2;margin:0 0 25px;font-size:1.4rem;font-weight:600;}
+  .form-group{margin-bottom:22px;}
+  label{font-weight:600;color:#1a4971;margin-bottom:8px;display:block;}
+  input,select,textarea{width:100%;padding:14px 16px;border:2px solid #e0e0e0;border-radius:10px;
+    font-size:15px;transition:all 0.3s;box-sizing:border-box;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:#1976d2;
+    box-shadow:0 0 0 4px rgba(25,118,210,0.15);}
+  textarea{resize:vertical;}
+  .input-row{display:flex;gap:15px;align-items:end;flex-wrap:wrap;}
+  .input-row > *{flex:1;min-width:220px;}
+  .input-row button{padding:14px 24px;background:#1976d2;color:white;border:none;
+    border-radius:10px;font-weight:600;cursor:pointer;}
+  .input-row button:hover{background:#1565c0;}
+  .table-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:18px;margin-top:10px;}
+  .table-item{background:#f8fbff;border:2px solid #bbdefb;border-radius:12px;padding:20px;
+    text-align:center;cursor:pointer;transition:all 0.3s;font-weight:600;}
+  .table-item:hover{border-color:#1976d2;transform:translateY(-4px);box-shadow:0 8px 20px rgba(25,118,210,0.2);}
+  .table-item.selected{background:#d4edda;border-color:#28a745;color:#155724;}
+  .table-item .seats{font-size:0.9em;color:#666;margin-top:6px;}
+  .confirm-btn{width:100%;padding:16px;background:#28a745;color:white;border:none;
+    border-radius:12px;font-size:1.2rem;font-weight:600;cursor:pointer;margin-top:30px;transition:0.3s;}
+  .confirm-btn:hover{background:#218838;transform:translateY(-3px);}
+  .confirm-btn:disabled{background:#aaa;cursor:not-allowed;}
+  .toast{position:fixed;top:20px;right:20px;min-width:320px;padding:16px 20px;
+    border-radius:12px;color:white;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.2);
+    transform:translateX(400px);opacity:0;transition:all 0.4s;z-index:10000;display:flex;gap:12px;}
+  .toast.show{transform:translateX(0);opacity:1;}
+  .toast.success{background:#4caf50;}
+  .toast.error{background:#f44336;}
+  .toast .close-toast{margin-left:auto;cursor:pointer;font-size:20px;opacity:0.8;}
+</style>
+
+<body>
+<div th:replace="~{customerView/header :: menu}"></div>
+
+<h1>Đặt bàn nhà hàng</h1>
+<p class="page-desc">Vui lòng chọn hình thức đặt bàn phù hợp</p>
+
+<div class="booking-container">
+  <div class="booking-header">
+    <h2>Đặt bàn trực tuyến</h2>
+    <div class="mode-switch">
+      <button type="button" class="mode-btn active" id="modeNew">Khách mới</button>
+      <button type="button" class="mode-btn" id="modeOld">Khách cũ</button>
+    </div>
+  </div>
+
+  <!-- KHÁCH MỚI -->
+  <div class="section" id="newCustomerSection">
+    <h3>Thông tin khách hàng mới</h3>
+    <div class="form-group">
+      <label>Họ và tên <span style="color:#e53935;">*</span></label>
+      <input type="text" id="newFullName" placeholder="Nguyễn Văn A">
+    </div>
+    <div class="form-group">
+      <label>Số điện thoại <span style="color:#e53935;">*</span></label>
+      <input type="text" id="newPhone" placeholder="0901234567" maxlength="11">
+    </div>
+    <div class="form-group">
+      <label>Địa chỉ (không bắt buộc)</label>
+      <input type="text" id="newAddress" placeholder="Số nhà, đường, phường...">
+    </div>
+    <button type="button" class="confirm-btn" onclick="checkAndContinueNewCustomer()">
+      Tiếp tục chọn bàn
+    </button>
+  </div>
+
+  <!-- KHÁCH CŨ -->
+  <div class="section" id="oldCustomerSection" style="display:none;">
+    <h3>Tìm khách hàng cũ</h3>
+    <div class="form-group">
+      <label>Số điện thoại <span style="color:#e53935;">*</span></label>
+      <div class="input-row">
+        <input type="text" id="oldPhone" placeholder="Nhập số điện thoại..." maxlength="11">
+        <button type="button" onclick="findOldCustomer()">Tìm khách</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Tên khách hàng</label>
+      <input type="text" id="oldCustomerName" readonly placeholder="Sẽ hiển thị khi tìm thấy">
+    </div>
+  </div>
+
+  <!-- CHỌN THỜI GIAN -->
+  <div class="section disabled" id="secTime">
+    <h3>Chọn thời gian & số khách</h3>
+    <div class="form-group">
+      <label>Ngày đặt bàn <span style="color:#e53935;">*</span></label>
+      <input type="date" id="date">
+    </div>
+    <div class="form-group">
+      <label>Giờ đến <span style="color:#e53935;">*</span></label>
+      <select id="timeStart"></select>
+    </div>
+    <div class="form-group">
+      <label>Số khách <span style="color:#e53935;">*</span></label>
+      <div class="input-row">
+        <input type="number" id="numPeople" min="1" max="30" placeholder="VD: 4">
+        <button type="button" onclick="searchTables()">Tìm bàn trống</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Ghi chú</label>
+      <textarea id="bookingNote" rows="3" placeholder="Góc gần cửa sổ, sinh nhật..."></textarea>
+    </div>
+  </div>
+
+  <!-- CHỌN BÀN -->
+  <div class="section disabled" id="secTable">
+    <h3>Chọn bàn (nhấn để chọn)</h3>
+    <div id="tables" class="table-grid"></div>
+    <button type="button" class="confirm-btn" onclick="confirmBooking()" id="btnConfirm" disabled>
+      Xác nhận đặt bàn
+    </button>
+  </div>
+</div>
+
+<div id="toastContainer"></div>
+
+<script>
+  let selectedTableId = null;
+  let customerData = null;
+  let isNewCustomerLocked = false;
+
+  function showToast(msg, type = 'success') {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span>${msg}</span><span class="close-toast" onclick="this.parentElement.remove()">×</span>`;
+    c.appendChild(t);
+    setTimeout(() => t.classList.add('show'), 100);
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 500); }, 4500);
+  }
+
+  document.getElementById('modeNew').onclick = () => {
+    document.getElementById('modeNew').classList.add('active');
+    document.getElementById('modeOld').classList.remove('active');
+    document.getElementById('newCustomerSection').style.display = 'block';
+    document.getElementById('oldCustomerSection').style.display = 'none';
+    resetForm();
+  };
+
+  document.getElementById('modeOld').onclick = () => {
+    document.getElementById('modeOld').classList.add('active');
+    document.getElementById('modeNew').classList.remove('active');
+    document.getElementById('oldCustomerSection').style.display = 'block';
+    document.getElementById('newCustomerSection').style.display = 'none';
+    resetForm();
+  };
+
+  function resetForm() {
+    document.getElementById('secTime').classList.add('disabled');
+    document.getElementById('secTable').classList.add('disabled');
+    document.getElementById('tables').innerHTML = '';
+    selectedTableId = null;
+    customerData = null;
+    isNewCustomerLocked = false;
+    document.getElementById('newCustomerSection').classList.remove('disabled');
+  }
+
+  async function checkAndContinueNewCustomer() {
+    const name = document.getElementById('newFullName').value.trim();
+    const phone = document.getElementById('newPhone').value.trim();
+    if (!name || !phone) return showToast("Vui lòng nhập đầy đủ họ tên và số điện thoại", "error");
+    if (!/^0[3-9]\d{8,9}$/.test(phone)) return showToast("Số điện thoại không hợp lệ", "error");
+
+    try {
+      const res = await fetch(`/reservation/findCustomer?phone=${phone}`);
+      const data = await res.json();
+      if (data.id) {
+        showToast("Số điện thoại đã tồn tại! Vui lòng chọn \"Khách cũ\"", "error");
+        return;
+      }
+      customerData = { fullName: name, phone: phone, address: document.getElementById('newAddress').value.trim() || null };
+      isNewCustomerLocked = true;
+      document.getElementById('newCustomerSection').classList.add('disabled');
+      document.getElementById('secTime').classList.remove('disabled');
+      showToast("Thông tin đã lưu. Hãy chọn giờ và bàn!", "success");
+    } catch (e) {
+      showToast("Lỗi kết nối", "error");
+    }
+  }
+
+  async function findOldCustomer() {
+    const phone = document.getElementById('oldPhone').value.trim();
+    if (!phone) return showToast("Vui lòng nhập số điện thoại", "error");
+    const res = await fetch(`/reservation/findCustomer?phone=${phone}`);
+    const data = await res.json();
+    if (!data.id) {
+      document.getElementById('oldCustomerName').value = "";
+      showToast("Không tìm thấy khách hàng", "error");
+    } else {
+      document.getElementById('oldCustomerName').value = data.fullName || data.name;
+      customerData = data;
+      document.getElementById('secTime').classList.remove('disabled');
+      showToast("Tìm thấy khách hàng!", "success");
+    }
+  }
+
+  function updateTimeOptions() {
+    const select = document.getElementById('timeStart');
+    select.innerHTML = '<option value="" disabled selected>Chọn giờ</option>';
+    const date = document.getElementById('date').value;
+    const today = new Date().toISOString().split('T')[0];
+    const isToday = date === today;
+    let h = isToday ? new Date().getHours() + (new Date().getMinutes() >= 30 ? 1 : 0) : 8;
+    for (; h <= 21; h++) {
+      const hh = h.toString().padStart(2, '0');
+      select.innerHTML += `<option value="${hh}:00">${hh}:00</option>`;
+      if (h < 21) select.innerHTML += `<option value="${hh}:30">${hh}:30</option>`;
+    }
+  }
+
+  async function searchTables() {
+    const payload = {
+      date: document.getElementById('date').value,
+      timeStart: document.getElementById('timeStart').value,
+      numPeople: parseInt(document.getElementById('numPeople').value)
+    };
+    if (!payload.date || !payload.timeStart || !payload.numPeople) return showToast("Vui lòng nhập đầy đủ", "error");
+
+    const res = await fetch("/reservation/available", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    const tables = await res.json();
+    const container = document.getElementById('tables');
+    container.innerHTML = '';
+    tables.forEach(t => {
+      const div = document.createElement('div');
+      div.className = 'table-item';
+      div.innerHTML = `<strong>${t.tableName}</strong><div class="seats">Ghế: ${t.seats}</div>`;
+      div.onclick = () => {
+        document.querySelectorAll('.table-item').forEach(x => x.classList.remove('selected'));
+        div.classList.add('selected');
+        selectedTableId = t.id;
+        document.getElementById('btnConfirm').disabled = false;
+      };
+      container.appendChild(div);
+    });
+    if (tables.length === 0) container.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#e53935;margin:40px 0;">Không còn bàn trống</p>';
+    document.getElementById('secTable').classList.remove('disabled');
+  }
+
+  async function confirmBooking() {
+    if (!selectedTableId) return showToast("Vui lòng chọn bàn", "error");
+    const payload = {
+      customerId: customerData?.id || null,
+      date: document.getElementById('date').value,
+      timeStart: document.getElementById('timeStart').value,
+      numPeople: document.getElementById('numPeople').value,
+      selectedTableId: selectedTableId,
+      note: document.getElementById('bookingNote').value.trim() || null
+    };
+    if (!customerData?.id) payload.newCustomer = customerData;
+
+    const res = await fetch("/reservation/confirm", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    const msg = await res.text();
+    if (msg === "SUCCESS") {
+      showToast("Đặt bàn thành công! Cảm ơn quý khách", "success");
+      setTimeout(() => {
+        window.location.href = "/customer/homePage";
+      }, 2000);
+    } else {
+      showToast("Đặt bàn thất bại: " + msg, "error");
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').min = today;
+    document.getElementById('date').value = today;
+    updateTimeOptions();
+    document.getElementById('date').addEventListener('change', updateTimeOptions);
+  });
+</script>
+</body>
+</html>

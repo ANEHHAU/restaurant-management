@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head">
+    <meta charset="UTF-8">
+    <title th:text="${title != null} ? ${title} : 'Nhà hàng Delicious'">Nhà hàng Delicious</title>
+
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                background: #f9f9f9;
+            }
+
+            /* ===== MENU CHÍNH ===== */
+            .menu {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 20px 40px;
+                border-bottom: 1px solid #ddd;
+                background: #f9f9f9;
+            }
+
+            /* ===== LOGO ===== */
+            .menu-left {
+                display: flex;
+                align-items: center;
+                gap: 30px;
+            }
+
+            .menu-left > a {
+                font-size: 2rem;
+                font-weight: 800;
+                color: #1976d2;
+                text-decoration: none;
+            }
+            .menu-left > a span {
+                color: #28a745;
+            }
+
+            /* ===== Nút TRANG CHỦ (PILL) ===== */
+            .menu-left .menu-item > a,
+            .menu-right .menu-item > a {
+                display: inline-block;
+                padding: 12px 22px;
+                border-radius: 999px;
+                border: 1.5px solid #ddd;
+                background: #ffffff;
+                color: #333;
+                font-size: 17px;
+                font-weight: 600;
+                text-decoration: none;
+                transition: all 0.2s ease;
+            }
+
+            /* Hover */
+            .menu-item > a:not(.active):hover {
+                box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+                transform: translateY(-1px);
+                background: #f8fbff;
+            }
+
+            /* Active */
+            .menu-item > a.active {
+                background: #007bff !important;
+                color: #fff !important;
+                border-color: #007bff !important;
+                box-shadow: 0 3px 10px rgba(0,123,255,0.45) !important;
+            }
+
+            .menu-right {
+                display: flex;
+                gap: 18px;
+            }
+
+            /* ===== SUBMENU ===== */
+            .menu-item {
+                position: relative;
+            }
+
+            .submenu {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                display: none;
+                flex-direction: column;
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                min-width: 200px;
+                padding: 6px 0;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+                z-index: 999;
+            }
+
+            .menu-item:hover .submenu {
+                display: flex;
+            }
+
+            .submenu a {
+                padding: 10px 18px;
+                text-decoration: none;
+                color: #333;
+                font-size: 15px;
+                white-space: nowrap;
+            }
+            .submenu a:hover {
+                background: #f2f2f2;
+            }
+
+        </style>
+</head>
+<body>
+<div th:fragment="menu">
+    <div class="menu">
+        <div class="menu-left">
+            <a href="/customer/homePage">
+                NHÀ HÀNG <span>DELICIOUS</span>
+            </a>
+            <div class="menu-item">
+                <a href="/customer/homePage">Trang chủ</a>
+            </div>
+        </div>
+
+        <div class="menu-right">
+            <div class="menu-item">
+                <a href="/customer/scanQrPage">Gọi Món</a>
+            </div>
+            <div class="menu-item">
+                <a href="/customer/booking">Đặt Bàn</a>
+            </div>
+            <div class="menu-item">
+                <a href="/customer/invoice">Hóa Đơn</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script active menu NẰM TRONG fragment -->
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            const path = window.location.pathname.replace(/\/+$/, "") || "/";
+            const links = document.querySelectorAll(".menu-item > a");
+
+            links.forEach(a => {
+                const href = a.getAttribute("href");
+                if (!href) return;
+
+                let isActive = false;
+
+                // 1. Khớp trực tiếp
+                if (path === href || path.startsWith(href + "/")) {
+                    isActive = true;
+                }
+
+                // 2. Mapping riêng: mọi URL /customer/order/... đều thuộc mục "Gọi Món"
+                if (href === "/customer/scanQrPage" && path.startsWith("/customer/order/")) {
+                    isActive = true;
+                }
+
+                if (isActive) {
+                    a.classList.add("active");
+                }
+            });
+        });
+    </script>
+
+</div>
+</body>
+
+
+</html>

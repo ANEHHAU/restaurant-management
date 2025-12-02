@@ -75,7 +75,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Controller
-@RequestMapping("/customer/order")
+@RequestMapping("/customer")
 public class CustomerViewController {
 
     @Autowired
@@ -93,7 +93,74 @@ public class CustomerViewController {
     @Autowired
     private CustomerRepository customerRepository; // Thêm repository này!
 
-    @GetMapping("/table/{tableId}")
+
+
+
+
+    @GetMapping("/homePage")
+    public String homePage() {
+        return "customerView/homePage";  // resources/templates/customerView/homePage.html
+    }
+
+    // Trang quét QR để gọi món
+    // URL: /customer/scanQrPage → trả về view customerView/scanQrPage
+    @GetMapping("/scanQrPage")
+    public String scanQrPage() {
+        return "customerView/scanQrPage";
+    }
+
+    // Trang đặt bàn
+    // URL: /customer/booking → trả về view customerView/book
+    @GetMapping("/booking")
+    public String booking() {
+        return "customerView/book";
+    }
+
+    // Trang xem hóa đơn
+    // URL: /customer/invoice → trả về view customerView/invoice
+    @GetMapping("/invoice")
+    public String invoice() {
+//        sau thêm id cho từng khách hàng để tìm
+        return "customerView/invoice";
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//    -------------------------------------------------
+
+
+    @GetMapping("/order/table/{tableId}")
     public String openCustomerOrder(@PathVariable Long tableId, Model model) {
 
         RestaurantTable table = tableRepository.findById(tableId)
@@ -126,7 +193,7 @@ public class CustomerViewController {
     /**
      * Tạo order mới: khách tự nhập tên + sđt + số lượng người
      */
-    @PostMapping("/create")
+    @PostMapping("/order/create")
     public String createCustomerOrder(
             @RequestParam Long tableId,
             @RequestParam String fullName,
@@ -174,7 +241,7 @@ public class CustomerViewController {
     /**
      * Tìm order cũ bằng số điện thoại (dành cho khách quay lại bàn đã có order)
      */
-    @PostMapping("/find-by-phone")
+    @PostMapping("/order/find-by-phone")
     public String findOrderByPhone(
             @RequestParam Long tableId,
             @RequestParam String phone,
@@ -207,7 +274,7 @@ public class CustomerViewController {
 
 
 
-    @PostMapping("/add-items")
+    @PostMapping("/order/add-items")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> addOrderItems(
             @RequestBody Map<String, Object> payload,
