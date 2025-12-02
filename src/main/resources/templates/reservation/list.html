@@ -147,6 +147,24 @@
         box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         padding: 20px;
         overflow-x: auto;
+
+
+        /* THÊM 4 DÒNG SAU ĐỂ CỐ ĐỊNH CHIỀU CAO */
+        height: 680px;            /* bạn tự chọn con số này */
+        min-height: 680px;        /* đảm bảo không bị co lại khi ít dữ liệu */
+        max-height: 80vh;         /* không vượt quá 80% chiều cao màn hình */
+        overflow-y: auto;         /* hiện thanh cuộn dọc khi tràn */
+    }
+
+
+
+    .table-container th {
+        position: sticky;
+        top: 0;
+        background: #1976d2;
+        color: white;
+        z-index: 10;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     table {

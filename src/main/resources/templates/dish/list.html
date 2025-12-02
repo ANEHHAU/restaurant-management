@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/header :: head}"></head>
+<style>
+  body {font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#f5f7fa;margin:0;padding:20px;}
+  h1 {text-align:center;color:#1a4971;margin-bottom:30px;font-size:2.2rem;font-weight:600;}
+  .table-container {
+    width:95%; max-width:1200px; margin:0 auto; background:white; border-radius:12px;
+    box-shadow:0 8px 25px rgba(0,0,0,0.1); padding:20px; height:680px; min-height:680px;
+    max-height:80vh; overflow-y:auto; position:relative;
+  }
+  .table-container th {position:sticky;top:0;background:#1976d2;color:white;z-index:10;
+    box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+  table {width:100%;border-collapse:collapse;font-size:15px;}
+  th {background:#1976d2;color:white;padding:14px 8px;text-align:center;font-weight:600;}
+  td {text-align:center;vertical-align:middle;padding:12px 8px;}
+  tr:nth-child(even) {background:#f8fbff;}
+  tr:hover {background:#edf4ff;}
+  .empty-message {text-align:center;padding:80px 20px;color:#888;font-size:1.2rem;background:#f9f9f9;}
+  .btn-edit, .btn-delete {
+    padding:7px 16px; border-radius:10px; border:none; cursor:pointer;
+    font-weight:600; color:white; margin:0 3px;
+  }
+  .btn-edit {background:#81d4fa;}
+  .btn-edit:hover {background:#29b6f6;}
+  .btn-delete {background:#ef9a9a;}
+  .btn-delete:hover {background:#ff7043;}
+  .status-active {background:#d4f8d4;color:#0f730c;padding:5px 12px;border-radius:6px;font-weight:bold;}
+  .status-inactive {background:#fff4c2;color:#8a6d00;padding:5px 12px;border-radius:6px;font-weight:bold;}
+  .overlay {display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5);
+    backdrop-filter:blur(4px); z-index:999; justify-content:center; align-items:center;}
+  .popup {background:white; width:500px; max-height:85vh; padding:25px; border-radius:16px;
+    overflow-y:auto; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.3);}
+  .btn-close {position:absolute; top:12px; right:12px; background:#e53935; color:white;
+    padding:8px 14px; border:none; border-radius:8px; cursor:pointer; font-weight:bold;}
+  .popup-input, .popup-select {
+    width:100%; padding:12px; margin:10px 0; border-radius:10px; border:2px solid #ddd;
+    box-sizing:border-box; font-size:15px;
+  }
+  .popup-btn-save {width:100%; padding:12px; background:#1976d2; color:white;
+    border:none; border-radius:10px; cursor:pointer; font-weight:600; margin-top:10px;}
+  .popup-btn-save:hover {background:#0d47a1;}
+
+  /* ================== AUTOCOMPLETE DANH MỤC ================== */
+  .category-wrapper {
+    position: relative;
+    margin: 15px 0;
+  }
+  #categoryInput {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    font-size: 15px;
+    box-sizing: border-box;
+  }
+  #categoryInput:focus {
+    outline: none;
+    border-color: #1976d2;
+    box-shadow: 0 0 0 4px rgba(25,118,210,0.15);
+  }
+  #categoryDatalist {
+    position: absolute;
+    left: 0; right: 0; top: 100%;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 20;
+    display: none;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  }
+  .category-option {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+  }
+  .category-option:hover {
+    background: #e3f2fd;
+    color: #1976d2;
+  }
+  .btn-add-category {
+    margin-top: 8px;
+    padding: 8px 14px;
+    background: #43a047;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  .btn-add-category:hover {background:#2e7d32;}
+</style>
+
+<body>
+<div th:replace="~{layout/header :: menu}"></div>
+<h1>Quản lý món ăn</h1>
+
+<div class="table-container">
+  <table>
+    <thead>
+    <tr>
+      <th>STT</th>
+      <th>Tên món</th>
+      <th>Danh mục</th>
+      <th>Giá (VNĐ)</th>
+      <th>Trạng thái</th>
+      <th>Hành động</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:if="${#lists.isEmpty(dishes)}">
+      <td colspan="6" class="empty-message">
+        Chưa có món ăn nào<br>
+        <small style="color:#888;">Nhấn nút (+) để thêm món đầu tiên</small>
+      </td>
+    </tr>
+    <tr th:each="d, iter : ${dishes}">
+      <td th:text="${iter.index + 1}"></td>
+      <td th:text="${d.dishName}"></td>
+      <td th:text="${d.category ?: '—'}"></td>
+      <td th:text="${#numbers.formatDecimal(d.unitPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></td>
+      <td>
+          <span th:class="${d.active} ? 'status-active' : 'status-inactive'"
+                th:text="${d.active} ? 'Đang bán' : 'Hết món'"></span>
+      </td>
+      <td>
+        <button class="btn-edit" th:onclick="'openEdit(' + ${d.id} + ')'">Sửa</button>
+        <button class="btn-delete" th:onclick="'openDelete(' + ${d.id} + ')'">Xóa</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Popup overlay -->
+<div id="overlay" class="overlay">
+  <div class="popup">
+    <button class="btn-close" onclick="closePopup()">×</button>
+    <div id="popupContent"></div>
+  </div>
+</div>
+
+<script th:inline="javascript">
+  let categories = [];
+
+  // Load danh sách danh mục một lần duy nhất
+  fetch("/api/dishes/listCategories")
+          .then(r => r.json())
+          .then(data => {
+            categories = data.sort((a, b) => a.localeCompare(b, 'vi'));
+          });
+
+  // Hàm render autocomplete (giống hệt file thêm món)
+  function initCategoryAutocomplete() {
+    const input = document.getElementById("categoryInput");
+    const datalist = document.getElementById("categoryDatalist");
+
+    if (!input || !datalist) return;
+
+    function renderDatalist(filter = "") {
+      datalist.innerHTML = "";
+      const filtered = categories.filter(c =>
+              c.toLowerCase().includes(filter.toLowerCase())
+      );
+
+      if (filtered.length === 0) {
+        datalist.style.display = "none";
+        return;
+      }
+
+      filtered.forEach(cat => {
+        const div = document.createElement("div");
+        div.className = "category-option";
+        div.textContent = cat;
+        div.onclick = () => {
+          input.value = cat;
+          datalist.style.display = "none";
+        };
+        datalist.appendChild(div);
+      });
+      datalist.style.display = "block";
+    }
+
+    // Gõ → lọc
+    input.addEventListener("input", () => renderDatalist(input.value));
+    // Click ngoài → ẩn
+    document.addEventListener("click", e => {
+      if (!input.contains(e.target) && !datalist.contains(e.target)) {
+        datalist.style.display = "none";
+      }
+    });
+    // Focus → hiện lại danh sách phù hợp
+    input.addEventListener("focus", () => renderDatalist(input.value));
+  }
+
+  // ========== MỞ POPUP SỬA ==========
+  function openEdit(id) {
+    fetch(`/api/dishes/${id}`).then(r => r.json()).then(d => {
+      document.getElementById("popupContent").innerHTML = `
+        <h2 style="color:#1976d2; margin-top:0;">Chỉnh sửa món ăn</h2>
+        <input type="hidden" id="id" value="${d.id}">
+
+        <label>Tên món</label>
+        <input class="popup-input" id="dishName" value="${d.dishName}">
+
+        <div class="category-wrapper">
+          <label for="categoryInput">Danh mục *</label>
+          <input type="text" id="categoryInput" value="${d.category || ''}"
+                 placeholder="Gõ hoặc chọn danh mục" autocomplete="off">
+          <div id="categoryDatalist"></div>
+        </div>
+
+        <label>Giá tiền (VNĐ)</label>
+        <input class="popup-input" id="unitPrice" type="number" value="${d.unitPrice}">
+
+        <label style="margin-top:12px; display:block;">
+          <input type="checkbox" id="outOfStock" ${!d.active ? 'checked' : ''}>
+          Hết món <span style="color:#e53935; font-size:0.9em;">(tích nếu món đang hết)</span>
+        </label>
+
+        <button class="popup-btn-save" onclick="saveEdit()">Lưu thay đổi</button>
+      `;
+
+      document.getElementById("overlay").style.display = "flex";
+
+      // Khởi động lại autocomplete sau khi DOM được render
+      setTimeout(initCategoryAutocomplete, 100);
+    });
+  }
+
+  // ========== LƯU SỬA ==========
+  function saveEdit() {
+    const dish = {
+      id: document.getElementById("id").value,
+      dishName: document.getElementById("dishName").value.trim(),
+      category: document.getElementById("categoryInput").value.trim() || null,
+      unitPrice: Number(document.getElementById("unitPrice").value),
+      active: !document.getElementById("outOfStock").checked
+    };
+
+    if (!dish.dishName || !dish.category || dish.unitPrice < 1000) {
+      alert("Vui lòng điền đầy đủ và đúng thông tin!");
+      return;
+    }
+
+    fetch("/api/dishes/update", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dish)
+    })
+            .then(r => r.ok ? location.reload() : alert("Cập nhật thất bại!"))
+            .catch(() => alert("Lỗi kết nối!"));
+  }
+
+  // ========== XÓA ==========
+  function openDelete(id) {
+    fetch(`/api/dishes/${id}`).then(r => r.json()).then(d => {
+      document.getElementById("popupContent").innerHTML = `
+        <h2 style="color:#e53935;">Xóa món ăn</h2>
+        <p>Xác nhận xóa món <b>${d.dishName}</b>?</p>
+        <div style="background:#f4f4f4;padding:12px;border-radius:8px;margin:15px 0;">
+          Danh mục: <b>${d.category || '—'}</b><br>
+          Giá: <b>${Number(d.unitPrice).toLocaleString('vi-VN')} ₫</b>
+        </div>
+        <button class="popup-btn-save" style="background:#e53935" onclick="confirmDelete(${d.id})">
+          Xóa vĩnh viễn
+        </button>
+      `;
+      document.getElementById("overlay").style.display = "flex";
+    });
+  }
+
+  function confirmDelete(id) {
+    fetch(`/api/dishes/delete/${id}`, { method: "DELETE" })
+            .then(r => r.json())
+            .then(data => {
+              alert(data.message || "Xóa thành công!");
+              location.reload();
+            })
+            .catch(() => alert("Lỗi khi xóa món!"));
+  }
+
+  function closePopup() {
+    document.getElementById("overlay").style.display = "none";
+  }
+</script>
+</body>
+</html>

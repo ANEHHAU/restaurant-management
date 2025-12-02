@@ -3,12 +3,136 @@
 <head th:replace="layout/header :: head"></head>
 
 <style>
+
+
+    .btn-view-items {
+        background: #c59bff;  /* tím nhạt */
+        color: white;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+
+    .btn-view-items:hover {
+        background: #a86dff; /* tím đậm hơn */
+    }
+    .popup-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .popup-box {
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        width: 360px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        animation: fadeIn 0.2s ease;
+    }
+    .close-btn {
+        margin-top: 10px;
+        padding: 6px 12px;
+        background: #ff6374;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+    @keyframes fadeIn {
+        from {opacity: 0; transform: scale(0.9);}
+        to {opacity: 1; transform: scale(1);}
+    }
+    /**/
+
+
+
+    .qr-modal {
+        display:none;
+        position:fixed;
+        top:0; left:0;
+        width:100%; height:100%;
+        background:rgba(0,0,0,0.5);
+        justify-content:center;
+        align-items:center;
+        z-index:99999;
+    }
+
+    .qr-popup-box {
+        background:white;
+        padding:25px;
+        border-radius:14px;
+        text-align:center;
+        animation:zoomIn .2s ease;
+        box-shadow:0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .qr-modal-img {
+        width:260px;
+        height:260px;
+        margin-bottom:20px;
+    }
+
+    .qr-btn {
+        padding:10px 20px;
+        border:none;
+        border-radius:8px;
+        font-size:15px;
+        cursor:pointer;
+        font-weight:600;
+        margin:5px;
+    }
+
+    .qr-btn.save {
+        background:#1976d2;
+        color:white;
+    }
+
+    .qr-btn.close {
+        background:#e0e0e0;
+        color:#333;
+    }
+
+    @keyframes zoomIn {
+        from { transform:scale(0.5); opacity:0; }
+        to { transform:scale(1); opacity:1; }
+    }
+
+
+
     body {font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f7fa;margin:0;padding:20px;}
     h1 {text-align:center;color:#1a4971;margin-bottom:30px;font-size:2.2rem;font-weight:600;}
 
     .table-container {
         width:95%; max-width:1200px; margin:0 auto; background:white;
         border-radius:12px; box-shadow:0 8px 25px rgba(0,0,0,0.1); padding:20px; overflow-x:auto;
+
+
+        /* THÊM 4 DÒNG SAU ĐỂ CỐ ĐỊNH CHIỀU CAO */
+        height: 680px;            /* bạn tự chọn con số này */
+        min-height: 680px;        /* đảm bảo không bị co lại khi ít dữ liệu */
+        max-height: 80vh;         /* không vượt quá 80% chiều cao màn hình */
+        overflow-y: auto;         /* hiện thanh cuộn dọc khi tràn */
+
+
+    }
+
+
+
+    .table-container th {
+        position: sticky;
+        top: 0;
+        background: #1976d2;
+        color: white;
+        z-index: 10;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     table {width:100%; border-collapse:collapse; font-size:15px;}
     th {background:#1976d2; color:white; padding:14px 8px; text-align:center; font-weight:600;}
@@ -42,6 +166,8 @@
             <th>Thời gian đặt</th>
             <th>Trạng thái</th>
             <th>Chi tiết món</th>
+            <th>Tổng tiền</th>
+            <th>Mã đặt món</th>
         </tr>
 
         <tr th:if="${#lists.isEmpty(orders)}">
@@ -65,18 +191,137 @@
 
             <td th:text="${#temporals.format(o.orderTime, 'dd/MM/yyyy HH:mm')}"></td>
 
+
             <td>
                 <th:block th:switch="${o.status.name()}">
-                    <span class="status-badge status-NEW" th:case="'NEW'">Mới tạo</span>
-                    <span class="status-badge status-IN_PROGRESS" th:case="'IN_PROGRESS'">Đang phục vụ</span>
+                    <span class="status-badge status-NEW" th:case="'NEW'">Chưa gọi món</span>
+                    <span class="status-badge status-IN_PROGRESS" th:case="'IN_PROGRESS'">Đã gọi món</span>
                     <span class="status-badge status-COMPLETED" th:case="'COMPLETED'">Hoàn thành</span>
                     <span class="status-badge status-CANCELLED" th:case="'CANCELLED'">Đã hủy</span>
                     <span class="status-badge" th:case="*">[[${o.status}]]</span>
                 </th:block>
             </td>
 
+            <td>
+                <button class="btn-view-items"
+                        th:onclick="|openItemsPopup(${o.id})|">
+                    Xem món
+                </button>
+
+
+            </td>
+
+            <td th:text="${#numbers.formatInteger(o.totalAmount, 3, 'COMMA')} + ' VNĐ'"></td>
+
+            <td>
+                <img class="qr-thumb"
+                     th:src="@{'/qr/table/' + ${o.table.id}}"
+                     th:attr="data-table-name=${'Bàn ' + o.table.tableName}"
+                     onclick="openQrPopup(this)"
+                     width="90" height="90"
+                     style="cursor:pointer; border-radius:8px;"/>
+            </td>
+
+
         </tr>
     </table>
 </div>
+
+<div id="qrPopup" class="qr-modal">
+    <div class="qr-popup-box">
+        <h2 id="qrTableName"
+            style="margin-bottom: 15px; color:#1a4971; font-size:20px; font-weight:700;">
+        </h2>
+
+        <img id="qrPopupImg" class="qr-modal-img" src=""/>
+
+        <div>
+            <button class="qr-btn save" onclick="downloadQr()">Lưu QR</button>
+            <button class="qr-btn close" onclick="closeQrPopup()">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<div id="itemPopup" class="popup-overlay" style="display:none;">
+    <div class="popup-box">
+        <h3>Chi tiết món đã gọi</h3>
+
+        <!-- THÊM BLOCK NÀY -->
+        <div id="popupInfo"
+             style="margin-bottom: 10px; color:#444; font-size:15px; line-height: 1.5;">
+        </div>
+
+        <ul id="itemList" style="padding-left:18px; margin-top:10px;"></ul>
+
+        <button onclick="closeItemsPopup()" class="close-btn">Đóng</button>
+    </div>
+</div>
+
+<script>
+
+    function openItemsPopup(orderId) {
+
+        fetch(`/orders/${orderId}/items`)
+            .then(res => res.json())
+            .then(data => {
+
+                // Bàn + khách
+                document.getElementById("popupInfo").innerHTML = `
+                <div><b>Bàn:</b> ${data.tableName}</div>
+                <div><b>Khách:</b> ${data.customerName}</div>
+            `;
+
+                // List món
+                const list = document.getElementById("itemList");
+                list.innerHTML = "";
+
+                data.items.forEach(i => {
+                    list.innerHTML += `
+                    <li>${i.dishName} × ${i.quantity}</li>
+                `;
+                });
+
+                document.getElementById("itemPopup").style.display = "flex";
+            });
+    }
+
+
+    function closeItemsPopup() {
+        document.getElementById("itemPopup").style.display = "none";
+    }
+
+
+
+let currentQrSrc = "";
+
+
+function openQrPopup(imgElement) {
+const src = imgElement.src;
+const tableName = imgElement.dataset.tableName; // đọc từ data-table-name
+
+currentQrSrc = src;
+
+document.getElementById("qrPopupImg").src = src;
+document.getElementById("qrTableName").innerText = tableName;
+
+document.getElementById("qrPopup").style.display = "flex";
+}
+
+
+function closeQrPopup() {
+document.getElementById("qrPopup").style.display = "none";
+}
+
+function downloadQr() {
+const link = document.createElement('a');
+link.href = currentQrSrc;
+link.download = "qr-table.png";
+document.body.appendChild(link);
+link.click();
+document.body.removeChild(link);
+}
+</script>
+
+
 </body>
 </html>

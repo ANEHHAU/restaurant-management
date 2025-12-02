@@ -69,6 +69,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
            """)
     int clearReservationByTableId(@Param("tableId") Long tableId);
 
+    @Query("SELECT o FROM Order o WHERE o.customer.id = :customerId AND o.table.id = :tableId AND o.status = 'ACTIVE'")
+    Optional<Order> findActiveOrderByCustomerAndTable(@Param("customerId") Long customerId,
+                                                      @Param("tableId") Long tableId);
 
 
 }
