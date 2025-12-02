@@ -3,6 +3,8 @@ package com.restaurant.management.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -72,4 +74,17 @@ public class Order {
     public void preUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+
+    // Tính tổng tiền của order bằng cách cộng tất cả lineTotal
+    public BigDecimal getTotalAmount() {
+        if (orderDetails == null || orderDetails.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        return orderDetails.stream()
+                .map(OrderDetail::getLineTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
 }

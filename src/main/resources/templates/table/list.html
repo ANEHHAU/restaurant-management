@@ -130,6 +130,23 @@
         border-radius: 12px;
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         padding: 20px;
+
+
+        /* THÊM 4 DÒNG SAU ĐỂ CỐ ĐỊNH CHIỀU CAO */
+        height: 680px;            /* bạn tự chọn con số này */
+        min-height: 680px;        /* đảm bảo không bị co lại khi ít dữ liệu */
+        max-height: 80vh;         /* không vượt quá 80% chiều cao màn hình */
+        overflow-y: auto;         /* hiện thanh cuộn dọc khi tràn */
+    }
+
+
+    .table-container th {
+        position: sticky;
+        top: 0;
+        background: #1976d2;
+        color: white;
+        z-index: 10;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     table {
@@ -282,6 +299,61 @@
         background: #d8e9ff;
     }
 
+
+
+
+    /*qr*/
+
+    .qr-modal {
+        display:none;
+        position:fixed;
+        top:0; left:0;
+        width:100%; height:100%;
+        background:rgba(0,0,0,0.5);
+        justify-content:center;
+        align-items:center;
+        z-index:99999;
+    }
+
+    .qr-popup-box {
+        background:white;
+        padding:25px;
+        border-radius:14px;
+        text-align:center;
+        animation:zoomIn .2s ease;
+        box-shadow:0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .qr-modal-img {
+        width:260px;
+        height:260px;
+        margin-bottom:20px;
+    }
+
+    .qr-btn {
+        padding:10px 20px;
+        border:none;
+        border-radius:8px;
+        font-size:15px;
+        cursor:pointer;
+        font-weight:600;
+        margin:5px;
+    }
+
+    .qr-btn.save {
+        background:#1976d2;
+        color:white;
+    }
+
+    .qr-btn.close {
+        background:#e0e0e0;
+        color:#333;
+    }
+
+    @keyframes zoomIn {
+        from { transform:scale(0.5); opacity:0; }
+        to { transform:scale(1); opacity:1; }
+    }
 </style>
 
 <body>
@@ -300,6 +372,7 @@
             <th>Tổng doanh thu</th>
             <th>Lịch đặt bàn</th>
             <th>Hành động</th>
+            <th>Mã đặt món</th>
         </tr>
 
         <tr th:each="t, iter : ${tables}">
@@ -357,7 +430,16 @@
                     </button>
                 </div>
             </td>
-
+            <td>
+                <img class="qr-thumb"
+                     th:src="@{'/qr/table/' + ${t[0]}}"
+                     th:attr="data-table-name=${'Bàn ' + t[1]}"
+                     th:alt="${'QR cho bàn ' + t[1]}"
+                     onclick="openQrPopup(this)"
+                     width="90" height="90"
+                     style="cursor:pointer; border-radius:8px; object-fit:contain; background:white; padding:5px;"
+                     th:if="${t[0] != null}"/>
+            </td>
 
         </tr>
     </table>
@@ -368,7 +450,61 @@
     <div class="popup" id="popup-content"></div>
 </div>
 
+
+
+<div id="qrPopup" class="qr-modal">
+    <div class="qr-popup-box">
+        <h2 id="qrTableName"
+            style="margin-bottom: 15px; color:#1a4971; font-size:20px; font-weight:700;">
+        </h2>
+
+        <img id="qrPopupImg" class="qr-modal-img" src=""/>
+
+        <div>
+            <button class="qr-btn save" onclick="downloadQr()">Lưu QR</button>
+            <button class="qr-btn close" onclick="closeQrPopup()">Đóng</button>
+        </div>
+    </div>
+</div>
+
 <script>
+
+
+
+// hander qr
+    let currentQrSrc = "";
+
+
+    function openQrPopup(imgElement) {
+        const src = imgElement.src;
+        const tableName = imgElement.dataset.tableName; // đọc từ data-table-name
+
+        currentQrSrc = src;
+
+        document.getElementById("qrPopupImg").src = src;
+        document.getElementById("qrTableName").innerText = tableName;
+
+        document.getElementById("qrPopup").style.display = "flex";
+    }
+
+
+    function closeQrPopup() {
+        document.getElementById("qrPopup").style.display = "none";
+    }
+
+    function downloadQr() {
+        const link = document.createElement('a');
+        link.href = currentQrSrc;
+        link.download = "qr-table.png";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+
+
+
+
 
     // =========================
     // HANDLE VIEW SCHEDULE
