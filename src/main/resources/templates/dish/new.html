@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/header :: head}"></head>
+
+<style>
+    body {font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f7fa;margin:0;padding:20px;color:#333;}
+    h1 {text-align:center;color:#1a4971;margin-bottom:10px;font-size:2.2rem;font-weight:600;}
+    .page-desc {text-align:center;color:#666;margin-bottom:40px;font-size:1.1rem;}
+    .form-container {width:95%;max-width:600px;margin:0 auto;background:white;border-radius:16px;
+        box-shadow:0 8px 30px rgba(0,0,0,0.12);padding:40px 35px;}
+    .form-title {text-align:center;color:#1976d2;font-size:1.8rem;margin-bottom:10px;font-weight:600;}
+    .form-subtitle {text-align:center;color:#666;margin-bottom:30px;}
+    label {display:block;font-weight:600;color:#1a4971;margin-bottom:8px;font-size:15px;}
+
+    /* Ô input danh mục + dropdown gợi ý */
+    .category-wrapper {
+        position: relative;
+    }
+    #categoryInput {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 15px;
+        box-sizing: border-box;
+    }
+    #categoryInput:focus {outline:none;border-color:#1976d2;box-shadow:0 0 0 4px rgba(25,118,210,0.15);}
+    #dishName {
+        padding: 14px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 15px;
+        transition: 0.3s;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    input:-webkit-autofill {
+        -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+        -webkit-text-fill-color: #333 !important;
+        border: 2px solid #e0e0e0 !important;
+        border-radius: 10px;
+    }
+    input:-webkit-autofill:focus {
+        -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+        border-color: #1976d2 !important;
+    }
+
+    #dishName:focus {
+        border-color: #1976d2;
+        box-shadow: 0 0 0 4px rgba(25,118,210,0.15);
+        outline: none;
+    }
+    #categoryDatalist {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-top: none;
+        border-radius: 0 0 10px 10px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 10;
+        display: none;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .category-option {
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+    }
+    .category-option:hover, .category-option.selected {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+
+    input[type="number"] {
+        width:100%;padding:14px 16px;border:2px solid #e0e0e0;border-radius:10px;
+        font-size:15px;transition:all .3s ease;box-sizing:border-box;
+    }
+    input[type="number"]:focus {outline:none;border-color:#1976d2;box-shadow:0 0 0 4px rgba(25,118,210,0.15);}
+
+    .btn-save {background:#1976d2;color:white;padding:14px 32px;border:none;border-radius:10px;
+        font-size:16px;font-weight:600;cursor:pointer;width:100%;margin-top:25px;transition:all .3s;
+        box-shadow:0 4px 15px rgba(25,118,210,0.3);}
+    .btn-save:hover {background:#1565c0;transform:translateY(-2px);}
+    .btn-back {display:block;text-align:center;margin-top:20px;color:#1976d2;text-decoration:none;
+        font-weight:600;font-size:15px;}
+    .btn-back:hover {color:#0d47a1;text-decoration:underline;}
+
+    .toast {position:fixed;top:20px;right:20px;min-width:300px;padding:16px 20px;border-radius:12px;
+        color:white;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.2);transform:translateX(400px);
+        opacity:0;transition:all .4s cubic-bezier(.68,-.55,.265,1.55);z-index:9999;display:flex;
+        align-items:center;gap:12px;}
+    .toast.show {transform:translateX(0);opacity:1;}
+    .toast.success {background:#4caf50;}
+    .toast.error {background:#f44336;}
+    .toast .close-toast {margin-left:auto;cursor:pointer;font-size:20px;opacity:.8;}
+</style>
+
+<body>
+<div th:replace="~{layout/header :: menu}"></div>
+
+<h1>Quản lý món ăn</h1>
+<p class="page-desc">Thêm món ăn mới vào menu</p>
+
+<div class="form-container">
+    <h2 class="form-title">Thêm món ăn mới</h2>
+    <p class="form-subtitle">Điền thông tin chi tiết món ăn</p>
+
+    <form id="dishForm">
+        <div>
+            <label for="dishName">Tên món *</label>
+            <input type="text"
+                   id="dishName"
+                   placeholder="Ví dụ: Cơm tấm sườn bì chả"
+                   autocomplete="off"
+                   required>
+        </div>
+
+        <div class="category-wrapper">
+            <label for="categoryInput">Danh mục *</label>
+            <input type="text" id="categoryInput" placeholder="Gõ tên danh mục hoặc chọn bên dưới" autocomplete="off" required>
+            <div id="categoryDatalist"></div>
+        </div>
+
+        <div style="margin-top:20px;">
+            <label for="unitPrice">Giá tiền (VNĐ) *</label>
+            <input type="number" id="unitPrice" min="1000" placeholder="Ví dụ: 65000" required>
+        </div>
+
+        <div style="margin:25px 0;">
+            <label style="font-weight:600; cursor:pointer;">
+                <input type="checkbox" id="outOfStock" style="margin-right:8px;"> Hết món
+            </label>
+        </div>
+
+        <button type="button" class="btn-save" onclick="saveDish()">Lưu món ăn</button>
+    </form>
+
+    <a href="/dishes" class="btn-back">Quay lại danh sách món</a>
+</div>
+
+<div id="toastContainer"></div>
+
+<script>
+    let categories = [];
+
+    // Load danh mục từ API
+    fetch("/api/dishes/listCategories")
+        .then(r => r.json())
+        .then(data => {
+            categories = data.sort((a, b) => a.localeCompare(b, 'vi'));
+            renderDatalist();
+        });
+
+    const input = document.getElementById("categoryInput");
+    const datalist = document.getElementById("categoryDatalist");
+
+    function renderDatalist(filter = "") {
+        datalist.innerHTML = "";
+        const filtered = categories.filter(c =>
+            c.toLowerCase().includes(filter.toLowerCase())
+        );
+
+        if (filtered.length === 0) {
+            datalist.style.display = "none";
+            return;
+        }
+
+        filtered.forEach(cat => {
+            const div = document.createElement("div");
+            div.className = "category-option";
+            div.textContent = cat;
+            div.onclick = () => {
+                input.value = cat;
+                datalist.style.display = "none";
+            };
+            datalist.appendChild(div);
+        });
+
+        datalist.style.display = "block";
+    }
+
+    // Khi gõ → lọc và hiện gợi ý
+    input.addEventListener("input", function() {
+        renderDatalist(this.value);
+    });
+
+    // Click ra ngoài → ẩn dropdown
+    document.addEventListener("click", function(e) {
+        if (!input.contains(e.target) && !datalist.contains(e.target)) {
+            datalist.style.display = "none";
+        }
+    });
+
+    // Focus → hiện toàn bộ danh mục
+    input.addEventListener("focus", () => renderDatalist(input.value));
+
+    // Toast
+    function showToast(msg, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<span>${type==='success'?'Check':'Warning'}</span><span>${msg}</span>
+            <span class="close-toast" onclick="this.parentElement.remove()">×</span>`;
+        document.getElementById('toastContainer').appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 100);
+        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 500); }, 4000);
+    }
+
+    // Lưu món
+    async function saveDish() {
+        const dishName = document.getElementById("dishName").value.trim();
+        const category = document.getElementById("categoryInput").value.trim();
+        const unitPrice = Number(document.getElementById("unitPrice").value);
+        const outOfStock = document.getElementById("outOfStock").checked;
+
+        if (!dishName) return showToast("Nhập tên món!", "error");
+        if (!category) return showToast("Nhập hoặc chọn danh mục!", "error");
+        if (!unitPrice || unitPrice < 1000) return showToast("Giá không hợp lệ!", "error");
+
+        const dish = {
+            dishName,
+            category: category || null,
+            unitPrice,
+            active: !outOfStock
+        };
+
+        try {
+            const res = await fetch("/api/dishes", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(dish)
+            });
+
+            if (res.ok) {
+                showToast("Thêm món thành công!");
+                setTimeout(() => location.href = "/dishes", 1200);
+            } else {
+                showToast("Lỗi thêm món!", "error");
+            }
+        } catch (e) {
+            showToast("Lỗi mạng!", "error");
+        }
+    }
+
+    // Ctrl + Enter
+    document.addEventListener("keydown", e => {
+        if (e.ctrlKey && e.key === "Enter") saveDish();
+    });
+</script>
+</body>
+</html>

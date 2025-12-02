@@ -3,6 +3,57 @@
 <head th:replace="layout/header :: head"></head>
 
 <style>
+
+
+    .btn-view-items {
+        background: #c59bff;  /* tím nhạt */
+        color: white;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+
+    .btn-view-items:hover {
+        background: #a86dff; /* tím đậm hơn */
+    }
+    .popup-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .popup-box {
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        width: 360px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        animation: fadeIn 0.2s ease;
+    }
+    .close-btn {
+        margin-top: 10px;
+        padding: 6px 12px;
+        background: #ff6374;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+    @keyframes fadeIn {
+        from {opacity: 0; transform: scale(0.9);}
+        to {opacity: 1; transform: scale(1);}
+    }
+    /**/
+
+
+
     .qr-modal {
         display:none;
         position:fixed;
@@ -62,6 +113,26 @@
     .table-container {
         width:95%; max-width:1200px; margin:0 auto; background:white;
         border-radius:12px; box-shadow:0 8px 25px rgba(0,0,0,0.1); padding:20px; overflow-x:auto;
+
+
+        /* THÊM 4 DÒNG SAU ĐỂ CỐ ĐỊNH CHIỀU CAO */
+        height: 680px;            /* bạn tự chọn con số này */
+        min-height: 680px;        /* đảm bảo không bị co lại khi ít dữ liệu */
+        max-height: 80vh;         /* không vượt quá 80% chiều cao màn hình */
+        overflow-y: auto;         /* hiện thanh cuộn dọc khi tràn */
+
+
+    }
+
+
+
+    .table-container th {
+        position: sticky;
+        top: 0;
+        background: #1976d2;
+        color: white;
+        z-index: 10;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     table {width:100%; border-collapse:collapse; font-size:15px;}
     th {background:#1976d2; color:white; padding:14px 8px; text-align:center; font-weight:600;}
@@ -95,6 +166,7 @@
             <th>Thời gian đặt</th>
             <th>Trạng thái</th>
             <th>Chi tiết món</th>
+            <th>Tổng tiền</th>
             <th>Mã đặt món</th>
         </tr>
 
@@ -130,7 +202,17 @@
                 </th:block>
             </td>
 
-<!--            <td> nút hiển thị chi tiết các món và số luowngj và tổng tiền tên bàn tên khách</td>-->
+            <td>
+                <button class="btn-view-items"
+                        th:onclick="|openItemsPopup(${o.id})|">
+                    Xem món
+                </button>
+
+
+            </td>
+
+            <td th:text="${#numbers.formatInteger(o.totalAmount, 3, 'COMMA')} + ' VNĐ'"></td>
+
             <td>
                 <img class="qr-thumb"
                      th:src="@{'/qr/table/' + ${o.table.id}}"
@@ -160,38 +242,84 @@
     </div>
 </div>
 
+<div id="itemPopup" class="popup-overlay" style="display:none;">
+    <div class="popup-box">
+        <h3>Chi tiết món đã gọi</h3>
 
+        <!-- THÊM BLOCK NÀY -->
+        <div id="popupInfo"
+             style="margin-bottom: 10px; color:#444; font-size:15px; line-height: 1.5;">
+        </div>
+
+        <ul id="itemList" style="padding-left:18px; margin-top:10px;"></ul>
+
+        <button onclick="closeItemsPopup()" class="close-btn">Đóng</button>
+    </div>
+</div>
 
 <script>
-    let currentQrSrc = "";
+
+    function openItemsPopup(orderId) {
+
+        fetch(`/orders/${orderId}/items`)
+            .then(res => res.json())
+            .then(data => {
+
+                // Bàn + khách
+                document.getElementById("popupInfo").innerHTML = `
+                <div><b>Bàn:</b> ${data.tableName}</div>
+                <div><b>Khách:</b> ${data.customerName}</div>
+            `;
+
+                // List món
+                const list = document.getElementById("itemList");
+                list.innerHTML = "";
+
+                data.items.forEach(i => {
+                    list.innerHTML += `
+                    <li>${i.dishName} × ${i.quantity}</li>
+                `;
+                });
+
+                document.getElementById("itemPopup").style.display = "flex";
+            });
+    }
 
 
-    function openQrPopup(imgElement) {
-        const src = imgElement.src;
-        const tableName = imgElement.dataset.tableName; // đọc từ data-table-name
-
-        currentQrSrc = src;
-
-        document.getElementById("qrPopupImg").src = src;
-        document.getElementById("qrTableName").innerText = tableName;
-
-        document.getElementById("qrPopup").style.display = "flex";
+    function closeItemsPopup() {
+        document.getElementById("itemPopup").style.display = "none";
     }
 
 
 
-    function closeQrPopup() {
-        document.getElementById("qrPopup").style.display = "none";
-    }
+let currentQrSrc = "";
 
-    function downloadQr() {
-        const link = document.createElement('a');
-        link.href = currentQrSrc;
-        link.download = "qr-table.png";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
+
+function openQrPopup(imgElement) {
+const src = imgElement.src;
+const tableName = imgElement.dataset.tableName; // đọc từ data-table-name
+
+currentQrSrc = src;
+
+document.getElementById("qrPopupImg").src = src;
+document.getElementById("qrTableName").innerText = tableName;
+
+document.getElementById("qrPopup").style.display = "flex";
+}
+
+
+function closeQrPopup() {
+document.getElementById("qrPopup").style.display = "none";
+}
+
+function downloadQr() {
+const link = document.createElement('a');
+link.href = currentQrSrc;
+link.download = "qr-table.png";
+document.body.appendChild(link);
+link.click();
+document.body.removeChild(link);
+}
 </script>
 
 

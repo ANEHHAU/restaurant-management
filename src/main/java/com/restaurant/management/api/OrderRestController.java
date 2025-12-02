@@ -1,13 +1,18 @@
 package com.restaurant.management.api;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.restaurant.management.model.*;
 import com.restaurant.management.repository.DishRepository;
 import com.restaurant.management.repository.OrderRepository;
 import com.restaurant.management.repository.TableRepository;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +31,46 @@ public class OrderRestController {
         private TableRepository tableRepository;
         @Autowired
         private DishRepository dishRepository;
+
+
+    @GetMapping("/{orderId}/items")
+    public Map<String, Object> getOrderItems(@PathVariable Long orderId) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // Map danh sách món
+        List<Map<String, Object>> items = order.getOrderDetails().stream()
+                .map(od -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("dishName", od.getDish().getDishName());
+                    m.put("quantity", od.getQuantity());
+                    m.put("unitPrice", od.getUnitPrice());
+                    m.put("lineTotal", od.getLineTotal());
+                    return m;
+                })
+                .toList();
+
+        // Map tổng response
+        Map<String, Object> response = new HashMap<>();
+        response.put("customerName",
+                order.getCustomer() != null ? order.getCustomer().getFullName() : "Khách vãng lai");
+
+        response.put("tableName",
+                order.getTable() != null ? order.getTable().getTableName() : "—");
+
+        response.put("items", items);
+
+        return response;
+    }
+
+
+
+
+
+
+
+
 
 
     @PostMapping("/api/orders")
