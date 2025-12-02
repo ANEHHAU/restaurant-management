@@ -24,6 +24,12 @@ public class DishApiController {
         return dishRepository.findAllOrderByCreatedAtDesc();
     }
 
+//    @GetMapping
+//    public List<Dish> getAll() {
+////        tạo thêm hàm tìm món đang còn
+//    }
+
+
 
     @GetMapping("/listCategories")
     public List<String> listCategories() {

@@ -350,8 +350,9 @@
                     <label>Họ tên</label>
                     <input class="popup-input" id="fullName" value="${c.fullName}">
 
-                    <label>Số điện thoại</label>
-                    <input class="popup-input" id="phone" value="${c.phone ?? ''}">
+                    <label>Số điện thoại <span class="required">*</span></label>
+                <input class="popup-input" id="phone" value="${c.phone ?? ''}"
+                       placeholder="Ví dụ: 0901234567" maxlength="15">
 
                     <label>Địa chỉ</label>
                     <textarea class="popup-input" id="address">${c.address ?? ''}</textarea>
@@ -359,6 +360,39 @@
                     <button class="popup-btn-save" onclick="saveEdit()">Lưu thay đổi</button>
                 `
                 );
+                const phoneInput = document.getElementById("phone");
+                phoneInput.addEventListener("input", function (e) {
+                    // Chỉ cho phép số và dấu + ở đầu
+                    let value = e.target.value;
+                    // Xóa mọi ký tự không phải số, trừ dấu + ở đầu
+                    let cleaned = value.replace(/[^\d+]/g, '');
+                    // Nếu có dấu +, phải đứng đầu
+                    if (cleaned.indexOf('+') > 0) {
+                        cleaned = cleaned.replace(/\+/g, '');
+                    }
+                    // Nếu có nhiều hơn 1 dấu +
+                    if ((cleaned.match(/\+/g) || []).length > 1) {
+                        cleaned = cleaned.replace(/\+/g, '');
+                    }
+
+                    // Cập nhật lại giá trị đã làm sạch
+                    if (cleaned !== value) {
+                        e.target.value = cleaned;
+                    }
+
+                    // Kiểm tra độ dài hợp lý (sau khi làm sạch)
+                    const digitsOnly = cleaned.replace('+', '');
+                    if (digitsOnly.length > 0 && (digitsOnly.length < 9 || digitsOnly.length > 15)) {
+                        phoneInput.style.borderColor = "#e74c3c";
+                    } else {
+                        phoneInput.style.borderColor = "#ddd";
+                    }
+                });
+
+
+
+
+
             });
     }
 

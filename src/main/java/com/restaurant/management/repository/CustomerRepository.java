@@ -14,4 +14,6 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
              "LOWER(c.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
              "OR c.phone LIKE CONCAT('%', :keyword, '%')")
      List<Customer> searchByKeyword(String keyword);
+
+
 }
